@@ -10,6 +10,9 @@ object TestRunner extends App {
     Text("age") addStyle Label <> "Age",
     Submit("Send info")
     )
+    
+  val field = Text("username")
+  println(field.html)
 
-  println(exform.html)
+//  println(exform.html)
 }

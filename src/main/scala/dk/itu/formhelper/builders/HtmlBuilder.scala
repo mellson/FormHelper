@@ -1,10 +1,16 @@
 package dk.itu.formhelper.builders
 import dk.itu.formhelper.FormHelper._
-import sun.font.TrueTypeFont
 
 object HtmlBuilder {
   private val indent = "  "
 
+  def htmlField[T](field: Field[T]): String = field match {
+    case Text(fname, value, styles, rules) => styleHelper("<input type=\"text\" id=\"" + field.id + "\" name=\"" + fname + valueHelper(value) + "\"", styles, rules)
+    case Password(fname, value, styles, rules) => styleHelper("<input type=\"password\" id=\"" + field.id + "\" name=\"" + fname + valueHelper(value) + "\"", styles, rules)
+    case Radio(fname, value, styles, rules) => styleHelper("<input type=\"radio\" id=\"" + field.id + "\" name=\"" + fname + valueHelper(value) + "\"", styles, rules)
+    case Submit(fname, value, styles, rules) => styleHelper("<input type=\"submit\" id=\"" + field.id + "\" value=\"" + fname + valueHelper(value) + "\"", styles, rules)
+  }  
+    
   // Create Html from a Form type
   def htmlForm[T](form: Form[T]): String = {
 
@@ -122,11 +128,4 @@ object HtmlBuilder {
   }
   
   private def valueHelper(value: String): String = if (value.isEmpty()) "" else  "\"" + " value=\"" + value
-
-  private def htmlField[T](field: Field[T]): String = field match {
-    case Text(fname, value, styles, rules) => styleHelper("<input type=\"text\" name=\"" + fname + valueHelper(value) + "\"", styles, rules)
-    case Password(fname, value, styles, rules) => styleHelper("<input type=\"password\" name=\"" + fname + valueHelper(value) + "\"", styles, rules)
-    case Radio(fname, value, styles, rules) => styleHelper("<input type=\"radio\" name=\"" + fname + valueHelper(value) + "\"", styles, rules)
-    case Submit(fname, value, styles, rules) => styleHelper("<input type=\"submit\" value=\"" + fname + valueHelper(value) + "\"", styles, rules)
-  }
 }
