@@ -19,6 +19,7 @@ trait Styles {
   
   case object ShowRequirements extends Style
   case object ShowErrors extends Style
+  case object Checked extends Style
 
   final case class Error(msg: String) extends Style
   case object Error extends Style {

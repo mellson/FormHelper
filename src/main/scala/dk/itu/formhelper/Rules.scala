@@ -3,13 +3,16 @@ package dk.itu.formhelper
 import scala.util.matching.Regex
 
 trait Rules {
-  trait Rule
+  trait Rule {
+    def validate(s: String): Boolean
+  }
   
   case class Regex(regex: String, shouldMatch: Boolean) extends Rule {
-    def verify(s: String): Boolean = if (shouldMatch) s.matches(regex) else !s.matches(regex)
+    def validate(s: String): Boolean = if (shouldMatch) s.matches(regex) else !s.matches(regex)
   }
   
   object Regex extends Rule {
+    def validate(s: String) = Regex.validate(s)
     def ==(s: String) = Regex(s, true)
     def !=(s: String) = Regex(s, false)
   }
@@ -21,7 +24,7 @@ trait Rules {
   object Alpha extends Regex("""^\D+$""", true)
   
   final case class Length(min: Int, max: Int, equals: Int) extends Rule {
-    def verify(s: String): Boolean = {
+    def validate(s: String): Boolean = {
       if (equals > 0) s.length == equals
       else if (max > 0) s.length < max && s.length > min
       else s.length > min
@@ -29,12 +32,18 @@ trait Rules {
   }
 
   object Length extends Rule {
+    def validate(s: String) = Length.validate(s)
     def >(n: Int) = Length(min = n, max = 0, equals = 0)
     def <(n: Int) = Length(min = 0, max = n, equals = 0)
     def ==(n: Int) = Length(min = 0, max = 0, equals = n)
   }
 
-  case object Required extends Rule
+  case object Required extends Rule {
+    def validate(s: String) = !s.isEmpty()
+  }
 
-  final case class Matches[T](field: T) extends Rule
+  // TODO Need to work on this
+  final case class Matches[T](field: T) extends Rule {
+    def validate(s: String) = false
+  }
 }

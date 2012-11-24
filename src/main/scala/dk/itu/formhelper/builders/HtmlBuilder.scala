@@ -42,9 +42,9 @@ object HtmlBuilder {
       val l_start = start + "Length must be "
       val l_end = " characters" + end
       length match {
-        case Length(min, 0, 0) => l_start + "at least " + min + l_end
-        case Length(0, max, 0) => l_start + "at most " + max + l_end
-        case Length(min, max, 0) => l_start + "at least " + min + " and at most " + max + l_end
+        case Length(min, 0, 0) => l_start + "over " + min + l_end
+        case Length(0, max, 0) => l_start + "under " + max + l_end
+        case Length(min, max, 0) => l_start + "over " + min + " and under " + max + l_end
         case Length(_, _, equals) => l_start + equals + l_end
       }
     }
@@ -72,8 +72,8 @@ object HtmlBuilder {
 
   // Build HTML for an rule related type
   private def ruleHelper(errMsg: String, styles: List[Style], rules: List[Rule]): String = {
-    val fieldInfoStart = "\n" + indent * 2 + "<field_message class=\"info\">"
-    val fieldErrorStart = "\n" + indent * 2 + "<field_message class=\"error\">"
+    val fieldInfoStart = "\n" + indent + indent + "<field_message class=\"info\">"
+    val fieldErrorStart = "\n" + indent + indent + "<field_message class=\"error\">"
     val fieldEnd = "</field>"
     
     def containsError(ss: List[Style]): Boolean = ss match {
@@ -109,6 +109,9 @@ object HtmlBuilder {
       }
       case SameLine :: xs => innerStyleHelper(i_html, xs, i_rules)
 
+      // Radio button checked
+      case Checked :: xs => innerStyleHelper(i_html + " checked", xs, i_rules)
+      
       // Error related cases
       case Error(msg) :: xs => innerStyleHelper(i_html, xs, i_rules) + ruleHelper(msg, filterStyles(styles), rules)
       case ShowRequirements :: xs => innerStyleHelper(i_html, xs, i_rules) + ruleHelper("", filterStyles(styles), rules)
@@ -117,11 +120,13 @@ object HtmlBuilder {
     }
     innerStyleHelper(html, filterStyles(styles), rules)
   }
+  
+  private def valueHelper(value: String): String = if (value.isEmpty()) "" else  "\"" + " value=\"" + value
 
   private def htmlField[T](field: Field[T]): String = field match {
-    case Text(fname, styles, rules) => styleHelper("<input type=\"text\" name=\"" + fname + "\"", styles, rules)
-    case Password(fname, styles, rules) => styleHelper("<input type=\"password\" name=\"" + fname + "\"", styles, rules)
-    case Radio(group, value, styles, rules) => styleHelper("<input type=\"radio\" name=\"" + group + "\"" + "value=\"" + value + "\"", styles, rules)
-    case Submit(fname, styles, rules) => styleHelper("<input type=\"submit\" value=\"" + fname + "\"", styles, rules)
+    case Text(fname, value, styles, rules) => styleHelper("<input type=\"text\" name=\"" + fname + valueHelper(value) + "\"", styles, rules)
+    case Password(fname, value, styles, rules) => styleHelper("<input type=\"password\" name=\"" + fname + valueHelper(value) + "\"", styles, rules)
+    case Radio(fname, value, styles, rules) => styleHelper("<input type=\"radio\" name=\"" + fname + valueHelper(value) + "\"", styles, rules)
+    case Submit(fname, value, styles, rules) => styleHelper("<input type=\"submit\" value=\"" + fname + valueHelper(value) + "\"", styles, rules)
   }
 }
