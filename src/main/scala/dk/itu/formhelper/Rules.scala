@@ -23,18 +23,29 @@ trait Rules {
   object Float extends Regex("""^-?(?:\d+|\d*\.\d+)$""", true)
   object Alpha extends Regex("""^\D+$""", true)
   
-  final case class Length(min: Int, max: Int, equals: Int) extends Rule {
+  final case class Length(min: Int, max: Int, equals: Int) extends Rule with Ordered[Length] {
     def validate(s: String): Boolean = {
-      if (equals > 0) s.length == equals
+      if (equals > 0 && equals != min && equals != max) s.length == equals
+      else if (equals > 0 && equals == min) s.length >= equals
+      else if (equals > 0 && equals == max) s.length <= equals
       else if (max > 0) s.length < max && s.length > min
       else s.length > min
+    }
+    
+    // TODO check that this is right
+    def compare(that: Length) = {
+      this.equals - that.equals + 
+      this.max - that.max + 
+      this.min - that.min
     }
   }
 
   object Length extends Rule {
     def validate(s: String) = Length.validate(s)
     def >(n: Int) = Length(min = n, max = 0, equals = 0)
+    def >=(n: Int) = Length(min = n, max = 0, equals = n)
     def <(n: Int) = Length(min = 0, max = n, equals = 0)
+    def <=(n: Int) = Length(min = 0, max = n, equals = n)
     def ==(n: Int) = Length(min = 0, max = 0, equals = n)
   }
 

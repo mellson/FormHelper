@@ -36,9 +36,9 @@ object HtmlBuilder {
   private def reqHelper(rules: List[Rule], start: String, end: String): String = {
     def lengthHelper(rules2: List[Rule], vals: (Int, Int, Int)): Length = rules2 match {
       case Length(min1, max1, equals1) :: xs =>
-        val min2 = math.max(min1, vals._1)
-        val max2 = math.max(max1, vals._2)
-        val equals2 = math.max(equals1, vals._3)
+        val min2 = min1 max vals._1
+        val max2 = max1 max vals._2
+        val equals2 = equals1 max vals._3
         lengthHelper(xs, (min2, max2, equals2))
       case _ :: xs => lengthHelper(xs, vals)
       case Nil => Length(vals._1, vals._2, vals._3)
@@ -48,10 +48,17 @@ object HtmlBuilder {
       val l_start = start + "Length must be "
       val l_end = " characters" + end
       length match {
-        case Length(min, 0, 0) => l_start + "over " + min + l_end
-        case Length(0, max, 0) => l_start + "under " + max + l_end
-        case Length(min, max, 0) => l_start + "over " + min + " and under " + max + l_end
-        case Length(_, _, equals) => l_start + equals + l_end
+        case Length(min, 0, 0) => l_start + "greater-than " + min + l_end
+        case Length(0, max, 0) => l_start + "less-than " + max + l_end
+        case Length(min, max, 0) => l_start + "greater-than " + min + " and less-than " + max + l_end
+        case Length(min, max, equals) => 
+          if (equals == min)
+            if (max==0) l_start + "greater-than or equal to " + equals + l_end
+            else l_start + "greater-than or equal to " + equals + " and less-than " + max + l_end
+          else if (equals == max)
+            if (min==0) l_start + "less-than or equal to " + equals + l_end
+            else l_start + "greater-than " + min + " and less-than or equal to " + equals + l_end
+          else l_start + equals + l_end
       }
     }
     
