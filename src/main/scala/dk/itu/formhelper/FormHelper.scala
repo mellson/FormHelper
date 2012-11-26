@@ -3,8 +3,14 @@ package dk.itu.formhelper
 import dk.itu.formhelper.builders._ 
 
 object FormHelper extends Styles with Rules {
+  final case class FormHtml[T](form: Form[T]) {
+    def plain = HtmlBuilder.plainHtml(form)
+    def withValidation = HtmlBuilder.htmlWithValidation(form)
+    def validationScript = "validation"
+  }
+  
   final case class Form[T](name: String, method: Method, action: String, fields: Field[T]*) {
-    def html: String = HtmlBuilder.htmlForm(this)
+    def html = FormHtml(this)
     
     def validatedForm(postData: Option[Map[String, Seq[String]]]) : (Boolean, Form[T])= {
       val postForm = ScalaBuilder.formFromPost(this, postData)
@@ -29,7 +35,7 @@ object FormHelper extends Styles with Rules {
     
     def id: String
     
-    def html: String = HtmlBuilder.htmlField(this)
+    def html: String = HtmlBuilder.htmlField(this, false)
   }
   
   case class Submit(fname: String = "", value: String = "", styles: List[Style] = Nil, rules: List[Rule] = Nil) extends Field[Submit] {

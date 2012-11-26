@@ -4,15 +4,24 @@ import dk.itu.formhelper.FormHelper._
 object HtmlBuilder {
   private val indent = "  "
 
-  def htmlField[T](field: Field[T]): String = field match {
-    case Text(fname, value, styles, rules) => styleHelper("<input type=\"text\" id=\"" + field.id + "\" name=\"" + fname + valueHelper(value) + "\"", styles, rules)
-    case Password(fname, value, styles, rules) => styleHelper("<input type=\"password\" id=\"" + field.id + "\" name=\"" + fname + valueHelper(value) + "\"", styles, rules)
-    case Radio(fname, value, styles, rules) => styleHelper("<input type=\"radio\" id=\"" + field.id + "\" name=\"" + fname + valueHelper(value) + "\"", styles, rules)
-    case Submit(fname, value, styles, rules) => styleHelper("<input type=\"submit\" id=\"" + field.id + "\" value=\"" + fname + valueHelper(value) + "\"", styles, rules)
+  private def valueHelper(value: String): String = if (value.isEmpty()) "" else  "\"" + " value=\"" + value
+  private def validationHelper[T](field: Field[T], validate: Boolean): String = field match {
+    case Submit(_,_,_,_) => ""
+    case _ => if (validate) " onblur=\"validate" + field.fname + "()\"" else ""  
+  }
+  def htmlField[T](field: Field[T], validate: Boolean): String = field match {
+    case Text(fname, value, styles, rules) => styleHelper("<input type=\"text\" id=\"" + field.id + "\" name=\"" + fname + valueHelper(value) + "\"" + validationHelper(field, validate), styles, rules)
+    case Password(fname, value, styles, rules) => styleHelper("<input type=\"password\" id=\"" + field.id + "\" name=\"" + fname + valueHelper(value) + "\"" + validationHelper(field, validate), styles, rules)
+    case Radio(fname, value, styles, rules) => styleHelper("<input type=\"radio\" id=\"" + field.id + "\" name=\"" + fname + valueHelper(value) + "\"" + validationHelper(field, validate), styles, rules)
+    case Submit(fname, value, styles, rules) => styleHelper("<input type=\"submit\" id=\"" + field.id + "\" value=\"" + fname + valueHelper(value) + "\"" + validationHelper(field, validate), styles, rules)
   }  
+  
+  def plainHtml[T](form: Form[T]): String = htmlForm(form, false)
+  
+  def htmlWithValidation[T](form: Form[T]): String = htmlForm(form, true)
     
   // Create Html from a Form type
-  def htmlForm[T](form: Form[T]): String = {
+  private def htmlForm[T](form: Form[T], validate: Boolean): String = {
 
     // Places <br> after each field except the last field
     def brHelper(field: Field[T]): String = if (field.styles.contains(SameLine)) "" else "<br>"
@@ -25,11 +34,12 @@ object HtmlBuilder {
     // Build HTML for form, add newline after each field except the last
     def helper(fields: List[Field[T]], html: String): String = fields match {
       case Nil => html + "</form>"
-      case f :: Nil => helper(Nil, html + indent + htmlField(f) + "\n")
-      case f :: fs => helper(fs, html + indent + htmlField(f) + brHelper(f) + "\n")
+      case f :: Nil => helper(Nil, html + indent + htmlField(f, validate) + "\n")
+      case f :: fs => helper(fs, html + indent + htmlField(f, validate) + brHelper(f) + "\n")
     }
 
-    helper(form.fields.toList, "<form name=\"" + form.name + "\" " + methodHelper(form.method) + " action=\"" + form.action + "\">\n")
+    val validation = if (validate) " onsubmit=\"return validateForm()\"" else ""
+    helper(form.fields.toList, "<form name=\"" + form.name + "\" " + methodHelper(form.method) + " action=\"" + form.action + "\"" + validation + ">\n")
   }
 
   // Build HTML for requirements
@@ -132,7 +142,5 @@ object HtmlBuilder {
       case _ => i_html + ">"
     }
     innerStyleHelper(html, filterStyles(styles), rules)
-  }
-  
-  private def valueHelper(value: String): String = if (value.isEmpty()) "" else  "\"" + " value=\"" + value
+  } 
 }

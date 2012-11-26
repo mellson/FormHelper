@@ -14,5 +14,6 @@ object TestRunner extends App {
   val field = Text("username")
   println(field.html)
 
+  exform.html.withValidation
 //  println(exform.html)
 }
