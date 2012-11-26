@@ -35,7 +35,6 @@ object FormHelper extends Styles with Rules {
     def setValue(v: String): Field
     
     def id: String
-    
     def html: String = HtmlBuilder.htmlField(this, false)
   }
   

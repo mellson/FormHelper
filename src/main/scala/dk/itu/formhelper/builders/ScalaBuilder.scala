@@ -34,16 +34,6 @@ object ScalaBuilder {
       fieldWithData = dataHelper(field, data, fname)
     } yield fieldWithData
     
-    
-    
-//    val errorFields = for {
-//      field <- dataFields
-//      rule <- field.rules
-//      newfield = if (!rule.validate(field.value)) field addStyle ShowErrors else field
-//    } yield newfield
-//    
-//    println(errorFields)
-    
     // If there was fields with data combine them with the rest of the fields
     if (!dataFields.isEmpty) {
       val newFields = for {

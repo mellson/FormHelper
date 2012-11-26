@@ -49,42 +49,43 @@ object HtmlBuilder {
 
   // Build HTML for requirements
   private def reqHelper(rules: List[Rule], start: String, end: String): String = {
-    def lengthHelper(rules2: List[Rule], vals: (Int, Int, Int)): Length = rules2 match {
-      case Length(min1, max1, equals1) :: xs =>
+    def valueHelper(rules2: List[Rule], vals: (Double, Double, Double, ValidationType)): Value = rules2 match {
+      case Value(min1, max1, equals1, valType) :: xs =>
         val min2 = min1 max vals._1
         val max2 = max1 max vals._2
         val equals2 = equals1 max vals._3
-        lengthHelper(xs, (min2, max2, equals2))
-      case _ :: xs => lengthHelper(xs, vals)
-      case Nil => Length(vals._1, vals._2, vals._3)
+        valueHelper(xs, (min2, max2, equals2, valType))
+      case _ :: xs => valueHelper(xs, vals)
+      case Nil => Value(vals._1, vals._2, vals._3, vals._4)
     }
-
-    def lengthString(length: Length): String = {
-      val l_start = start + "Length must be "
+    
+    def valueString(length: Value): String = {
+      val l_start = start + "Value must be "
       val l_end = " characters" + end
       length match {
-        case Length(min, 0, 0) => l_start + "greater-than " + min + l_end
-        case Length(0, max, 0) => l_start + "less-than " + max + l_end
-        case Length(min, max, 0) => l_start + "greater-than " + min + " and less-than " + max + l_end
-        case Length(min, max, equals) =>
+        case Value(min, -1, -1, valType) => l_start + "greater-than " + min + l_end
+        case Value(-1, max, -1, valType) => l_start + "less-than " + max + l_end
+        case Value(min, max, -1, valType) => l_start + "greater-than " + min + " and less-than " + max + l_end
+        case Value(min, max, equals, valType) =>
           if (equals == min)
-            if (max == 0) l_start + "greater-than or equal to " + equals + l_end
+            if (max == -1) l_start + "greater-than or equal to " + equals + l_end
             else l_start + "greater-than or equal to " + equals + " and less-than " + max + l_end
           else if (equals == max)
-            if (min == 0) l_start + "less-than or equal to " + equals + l_end
+            if (min == -1) l_start + "less-than or equal to " + equals + l_end
             else l_start + "greater-than " + min + " and less-than or equal to " + equals + l_end
           else l_start + equals + l_end
       }
     }
 
     def isLength(r: Rule) = r match {
-      case Length(_, _, _) => true
+      case Value(_, _, _, _) => true
       case _ => false
     }
 
     rules match {
       case Required :: xs => start + "Field is required" + end + reqHelper(xs, start, end)
-      case Length(min, max, equals) :: xs => lengthString(lengthHelper(xs, (min, max, equals))) + reqHelper(xs.filter(r => (!isLength(r))), start, end)
+//      case Length(min, max, equals) :: xs => lengthString(lengthHelper(xs, (min, max, equals))) + reqHelper(xs.filter(r => (!isLength(r))), start, end)
+      case Value(min, max, equals, valType) :: xs => valueString(valueHelper(xs, (min, max, equals, valType))) + reqHelper(xs.filter(r => (!isLength(r))), start, end)
       case Matches(field) :: xs => start + "Must match " + field + end + reqHelper(xs, start, end)
       case Email :: xs => start + "Must be a valid email" + end + reqHelper(xs, start, end)
       case IP :: xs => start + "Must be a valid IP" + end + reqHelper(xs, start, end)
@@ -113,7 +114,7 @@ object HtmlBuilder {
     if (styles.contains(ShowRequirements) && containsError(styles))
       if (errMsg.isEmpty()) "" else fieldInfoStart + errMsg + fieldEnd
     else if (styles.contains(ShowRequirements) && !containsError(styles))
-      reqHelper(rules, fieldErrorStart, fieldEnd)
+      reqHelper(rules, fieldInfoStart, fieldEnd)
     else if (styles.contains(ShowErrors) && containsError(styles))
       if (errMsg.isEmpty()) "" else fieldErrorStart + errMsg + fieldEnd
     else if (styles.contains(ShowErrors) && !containsError(styles))
