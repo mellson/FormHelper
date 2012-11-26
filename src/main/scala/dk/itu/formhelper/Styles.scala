@@ -8,6 +8,7 @@ trait Styles {
   case object Before extends Placement
   case object Inside extends Placement
 
+  // TODO Should I rename to Custom Html ?
   final case class Label(label: String, placement: Placement) extends Style
   object Label extends Style {
     def <(label: String) = Label(label, Before)

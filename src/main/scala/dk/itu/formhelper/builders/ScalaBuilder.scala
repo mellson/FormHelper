@@ -2,8 +2,8 @@ package dk.itu.formhelper.builders
 import dk.itu.formhelper.FormHelper._
 
 object ScalaBuilder {
-  def validateForm[T](form: Form[T]): Boolean = {
-    def fieldValidator(field: Field[T], rule: Rule) = (field,rule) match {
+  def validateForm(form: Form): Boolean = {
+    def fieldValidator(field: Field, rule: Rule) = (field,rule) match {
       case (Radio(_,_,_,_),Required) => !form.fields.filter(f=>f.fname==field.fname).filter(f=>f.styles.contains(Checked)).isEmpty
       case _ => rule.validate(field.value)
     }
@@ -15,10 +15,10 @@ object ScalaBuilder {
     !booleans.contains(false)
   }
   
-  def formFromPost[T](form: Form[T], postData: Option[Map[String, Seq[String]]]): Form[T] = { 
+  def formFromPost(form: Form, postData: Option[Map[String, Seq[String]]]): Form = { 
 
     // Checks if the data value should be added. Need this check because Radio fields are a bit weird.
-    def dataHelper[T](field: Field[T], data: String, fname: String) = field match {
+    def dataHelper(field: Field, data: String, fname: String) = field match {
       case Radio(groupname,value,_,_) =>
         if (groupname==fname && data==value) field setValue data else field
       case _ => field setValue data

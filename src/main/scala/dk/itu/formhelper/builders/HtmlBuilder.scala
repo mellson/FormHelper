@@ -4,35 +4,40 @@ import dk.itu.formhelper.FormHelper._
 object HtmlBuilder {
   private val indent = "  "
 
-  private def valueHelper(value: String): String = if (value.isEmpty()) "" else  "\"" + " value=\"" + value
-  private def validationHelper[T](field: Field[T], validate: Boolean): String = field match {
-    case Submit(_,_,_,_) => ""
-    case _ => if (validate) " onblur=\"validate" + field.fname + "()\"" else ""  
+  private def valueHelper(value: String): String = if (value.isEmpty()) "" else "\"" + " value=\"" + value
+  private def validationHelper(field: Field, validate: Boolean): String = field match {
+    case Submit(_, _, _, _) => ""
+    case _ => if (validate) " onblur=\"validate" + field.fname + "()\"" else ""
   }
-  def htmlField[T](field: Field[T], validate: Boolean): String = field match {
-    case Text(fname, value, styles, rules) => styleHelper("<input type=\"text\" id=\"" + field.id + "\" name=\"" + fname + valueHelper(value) + "\"" + validationHelper(field, validate), styles, rules)
-    case Password(fname, value, styles, rules) => styleHelper("<input type=\"password\" id=\"" + field.id + "\" name=\"" + fname + valueHelper(value) + "\"" + validationHelper(field, validate), styles, rules)
-    case Radio(fname, value, styles, rules) => styleHelper("<input type=\"radio\" id=\"" + field.id + "\" name=\"" + fname + valueHelper(value) + "\"" + validationHelper(field, validate), styles, rules)
-    case Submit(fname, value, styles, rules) => styleHelper("<input type=\"submit\" id=\"" + field.id + "\" value=\"" + fname + valueHelper(value) + "\"" + validationHelper(field, validate), styles, rules)
-  }  
-  
-  def plainHtml[T](form: Form[T]): String = htmlForm(form, false)
-  
-  def htmlWithValidation[T](form: Form[T]): String = htmlForm(form, true)
-    
+  // TODO Split this into more cases and helper methods ?
+  def htmlField(field: Field, validate: Boolean): String = {
+    def inputType(input: String) = "<input type=\"" + input + "\""
+    field match {
+      // TODO Consider an implicit conversion
+      case Text(fname, value, styles, rules) => styleHelper(inputType("text") + " id=\"" + field.id + "\" name=\"" + fname + valueHelper(value) + "\"" + validationHelper(field, validate), styles, rules)
+      case Password(fname, value, styles, rules) => styleHelper("<input type=\"password\" id=\"" + field.id + "\" name=\"" + fname + valueHelper(value) + "\"" + validationHelper(field, validate), styles, rules)
+      case Radio(fname, value, styles, rules) => styleHelper("<input type=\"radio\" id=\"" + field.id + "\" name=\"" + fname + valueHelper(value) + "\"" + validationHelper(field, validate), styles, rules)
+      case Submit(fname, value, styles, rules) => styleHelper("<input type=\"submit\" id=\"" + field.id + "\" value=\"" + fname + valueHelper(value) + "\"" + validationHelper(field, validate), styles, rules)
+    }
+  }
+
+  def plainHtml(form: Form): String = htmlForm(form, false)
+
+  def htmlWithValidation(form: Form): String = htmlForm(form, true)
+
   // Create Html from a Form type
-  private def htmlForm[T](form: Form[T], validate: Boolean): String = {
+  private def htmlForm(form: Form, validate: Boolean): String = {
 
     // Places <br> after each field except the last field
-    def brHelper(field: Field[T]): String = if (field.styles.contains(SameLine)) "" else "<br>"
+    def brHelper(field: Field): String = if (field.styles.contains(SameLine)) "" else "<br>"
 
-    def methodHelper[T](method: Method): String = method match {
+    def methodHelper(method: Method): String = method match {
       case Get => "method=\"get\""
       case Post => "method=\"post\""
     }
 
     // Build HTML for form, add newline after each field except the last
-    def helper(fields: List[Field[T]], html: String): String = fields match {
+    def helper(fields: List[Field], html: String): String = fields match {
       case Nil => html + "</form>"
       case f :: Nil => helper(Nil, html + indent + htmlField(f, validate) + "\n")
       case f :: fs => helper(fs, html + indent + htmlField(f, validate) + brHelper(f) + "\n")
@@ -61,25 +66,25 @@ object HtmlBuilder {
         case Length(min, 0, 0) => l_start + "greater-than " + min + l_end
         case Length(0, max, 0) => l_start + "less-than " + max + l_end
         case Length(min, max, 0) => l_start + "greater-than " + min + " and less-than " + max + l_end
-        case Length(min, max, equals) => 
+        case Length(min, max, equals) =>
           if (equals == min)
-            if (max==0) l_start + "greater-than or equal to " + equals + l_end
+            if (max == 0) l_start + "greater-than or equal to " + equals + l_end
             else l_start + "greater-than or equal to " + equals + " and less-than " + max + l_end
           else if (equals == max)
-            if (min==0) l_start + "less-than or equal to " + equals + l_end
+            if (min == 0) l_start + "less-than or equal to " + equals + l_end
             else l_start + "greater-than " + min + " and less-than or equal to " + equals + l_end
           else l_start + equals + l_end
       }
     }
-    
+
     def isLength(r: Rule) = r match {
-      case Length(_,_,_) => true
-      case _			 => false
+      case Length(_, _, _) => true
+      case _ => false
     }
 
     rules match {
       case Required :: xs => start + "Field is required" + end + reqHelper(xs, start, end)
-      case Length(min, max, equals) :: xs => lengthString(lengthHelper(xs, (min, max, equals))) + reqHelper(xs.filter(r=>(!isLength(r))), start, end)
+      case Length(min, max, equals) :: xs => lengthString(lengthHelper(xs, (min, max, equals))) + reqHelper(xs.filter(r => (!isLength(r))), start, end)
       case Matches(field) :: xs => start + "Must match " + field + end + reqHelper(xs, start, end)
       case Email :: xs => start + "Must be a valid email" + end + reqHelper(xs, start, end)
       case IP :: xs => start + "Must be a valid IP" + end + reqHelper(xs, start, end)
@@ -89,7 +94,7 @@ object HtmlBuilder {
       case Regex(regex, bool) :: xs =>
         val not = if (bool) "" else "not"
         start + "Must " + not + " match this regex: " + regex + end + reqHelper(xs, start, end)
-      case _ => "" 
+      case _ => ""
     }
   }
 
@@ -98,13 +103,13 @@ object HtmlBuilder {
     val fieldInfoStart = "\n" + indent + indent + "<field_message class=\"info\">"
     val fieldErrorStart = "\n" + indent + indent + "<field_message class=\"error\">"
     val fieldEnd = "</field>"
-    
+
     def containsError(ss: List[Style]): Boolean = ss match {
-      case Error(msg)::xs => true
-      case _::xs => containsError(xs)
+      case Error(msg) :: xs => true
+      case _ :: xs => containsError(xs)
       case Nil => false
     }
-      
+
     if (styles.contains(ShowRequirements) && containsError(styles))
       if (errMsg.isEmpty()) "" else fieldInfoStart + errMsg + fieldEnd
     else if (styles.contains(ShowRequirements) && !containsError(styles))
@@ -112,7 +117,7 @@ object HtmlBuilder {
     else if (styles.contains(ShowErrors) && containsError(styles))
       if (errMsg.isEmpty()) "" else fieldErrorStart + errMsg + fieldEnd
     else if (styles.contains(ShowErrors) && !containsError(styles))
-       reqHelper(rules, fieldErrorStart, fieldEnd)
+      reqHelper(rules, fieldErrorStart, fieldEnd)
     else ""
   }
 
@@ -134,7 +139,7 @@ object HtmlBuilder {
 
       // Radio button checked
       case Checked :: xs => innerStyleHelper(i_html + " checked", xs, i_rules)
-      
+
       // Error related cases
       case Error(msg) :: xs => innerStyleHelper(i_html, xs, i_rules) + ruleHelper(msg, filterStyles(styles), rules)
       case ShowRequirements :: xs => innerStyleHelper(i_html, xs, i_rules) + ruleHelper("", filterStyles(styles), rules)
@@ -142,5 +147,5 @@ object HtmlBuilder {
       case _ => i_html + ">"
     }
     innerStyleHelper(html, filterStyles(styles), rules)
-  } 
+  }
 }

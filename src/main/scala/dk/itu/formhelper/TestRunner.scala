@@ -12,8 +12,8 @@ object TestRunner extends App {
     )
     
   val field = Text("username")
-  println(field.html)
+//  println(field.html)
 
   exform.html.withValidation
-//  println(exform.html)
+  println(exform.html.plain)
 }
