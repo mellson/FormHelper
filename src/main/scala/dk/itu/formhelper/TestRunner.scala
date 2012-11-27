@@ -11,8 +11,8 @@ object TestRunner extends App {
     Submit("Send info")
     )
     
-  val field = Text("username") addRule Required
-  println(field)
+  val field = Text("username") addRule StringValue == "hej"
+  println(field.rules.head.validate("hej"))
 
 //  exform.html.withValidation
 //  println(exform.html.plain)

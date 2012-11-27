@@ -71,6 +71,14 @@ trait Rules {
   object Length extends ValueHelper {
     val valType = LengthValidation
   }
+  
+  final case class StringValue(string: String) extends Rule {
+     def validate(s: String) = string == s
+  }
+  
+  object StringValue {
+    def ==(s: String) = StringValue(s)
+  }
 
   case object Required extends Rule {
     def validate(s: String) = !s.isEmpty()
