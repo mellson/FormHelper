@@ -7,13 +7,14 @@ object TestRunner extends App {
     method = Post,
     action = "/submit",
     Text("username") addStyle Label <> "Name",
-    Text("age") addStyle Label <> "Age",
+    Password("age") addStyle Label <> "Age",
+    Radio("super","ja"),
     Submit("Send info")
     )
     
   val field = Text("username") addRule StringValue == "hej"
-  println(field.rules.head.validate("hej"))
+//  println(field.rules.head.validate("hej"))
 
 //  exform.html.withValidation
-//  println(exform.html.plain)
+  println(exform.html.plain)
 }

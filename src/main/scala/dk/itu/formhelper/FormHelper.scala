@@ -26,7 +26,7 @@ object FormHelper extends Styles with Rules {
   
   trait Field {
     val fname: String
-    val value: String
+    def value: String
     val styles: List[Style]
     val rules: List[Rule]
     
@@ -36,13 +36,16 @@ object FormHelper extends Styles with Rules {
     
     def id: String
     def html: String = HtmlBuilder.htmlField(this, false)
+    def inputType: String
   }
   
-  case class Submit(fname: String = "", value: String = "", styles: List[Style] = Nil, rules: List[Rule] = Nil) extends Field {
+  case class Submit(fname: String = "", styles: List[Style] = Nil, rules: List[Rule] = Nil) extends Field {
     def addRule(r: Rule) = this
     def addStyle(s: Style) = this
     def setValue(v: String) = this
     def id = fname
+    def inputType = "submit"
+    def value = fname
   }
   
   case class Text(fname: String, value: String = "", styles: List[Style] = Nil, rules: List[Rule] = Nil) extends Field {
@@ -51,6 +54,7 @@ object FormHelper extends Styles with Rules {
     def setValue(v: String): Text = Text(fname, v, styles, rules)
     def matches(that: Text) = Text(fname, value, styles, Matches(that) :: rules)
     def id = fname
+    def inputType = "text"
   }
 
   case class Password(fname: String, value: String = "", styles: List[Style] = Nil, rules: List[Rule] = Nil) extends Field {
@@ -59,6 +63,7 @@ object FormHelper extends Styles with Rules {
     def setValue(v: String): Password = Password(fname, v, styles, rules)
     def matches(that: Password) = Password(fname, value, styles, Matches(that) :: rules)
     def id = fname
+    def inputType = "password"
   }
 
   // fname is the group name for a Radio button group
@@ -68,6 +73,7 @@ object FormHelper extends Styles with Rules {
     def setValue(v: String): Radio = Radio(fname, value, Checked :: styles, rules)
     def matches(that: Radio) = Radio(fname, value, styles, Matches(that) :: rules)
     def id = fname+value
+    def inputType = "radio"
   }
 }
 
