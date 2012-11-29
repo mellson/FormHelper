@@ -28,7 +28,7 @@ trait Rules {
   case object FloatValidation extends ValidationType
   case object LengthValidation extends ValidationType
 
-  final case class Value(min: Double, max: Double, equals: Double, valType: ValidationType) extends Rule {
+  final case class Value[T](minVal: T, maxVal: T, equalVal: T, valType: ValidationType)(implicit num : Numeric[T]) extends Rule {
     def validate(s: String): Boolean = {
       def getValue(s: String) = valType match {
         case IntValidation =>
@@ -40,12 +40,13 @@ trait Rules {
         case LengthValidation =>
           validateHelper(s.length)
       }
-      def validateHelper(sValue: Double) = {
-        if (equals > 0 && equals != min && equals != max) sValue == equals
-        else if (equals > 0 && equals == min) sValue >= equals
-        else if (equals > 0 && equals == max) sValue <= equals
-        else if (max > 0) sValue < max && sValue > min
-        else sValue > min
+      def validateHelper(sValue: T) = {
+        import num._
+        if (equalVal > num.zero && equalVal != minVal && equalVal != maxVal) sValue == equalVal
+        else if (equalVal > num.zero && equalVal == minVal) sValue >= equalVal
+        else if (equalVal > num.zero && equalVal == maxVal) sValue <= equalVal
+        else if (maxVal > num.zero) sValue < maxVal && sValue > minVal
+        else sValue > minVal
       }
       getValue(s)
     }
@@ -53,11 +54,11 @@ trait Rules {
   
   trait ValueHelper {
     val valType: ValidationType
-    def >(n: Double) = Value(min = n, max = -1, equals = -1, valType)
-    def >=(n: Double) = Value(min = n, max = -1, equals = n, valType)
-    def <(n: Double) = Value(min = -1, max = n, equals = -1, valType)
-    def <=(n: Double) = Value(min = -1, max = n, equals = n, valType)
-    def ==(n: Double) = Value(min = -1, max = -1, equals = n, valType)
+    def >(n: Double) = Value(minVal = n, maxVal = -1, equalVal = -1, valType)
+    def >=(n: Double) = Value(minVal = n, maxVal = -1, equalVal = n, valType)
+    def <(n: Double) = Value(minVal = -1, maxVal = n, equalVal = -1, valType)
+    def <=(n: Double) = Value(minVal = -1, maxVal = n, equalVal = n, valType)
+    def ==(n: Double) = Value(minVal = -1, maxVal = -1, equalVal = n, valType)
   }
 
   object IntValue extends ValueHelper {
