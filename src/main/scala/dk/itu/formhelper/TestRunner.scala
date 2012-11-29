@@ -13,8 +13,8 @@ object TestRunner extends App {
     )
     
   val field = Text("username") addRule StringValue == "hej"
-//  println(field.rules.head.validate("hej"))
-
-//  exform.html.withValidation
-  println(exform.html.plain)
+//  println(field.htmlWithValidation)
+//
+//  println(exform.htmlWithValidation)
+  println(exform.fields.filter(f => f.id == "username"))
 }

@@ -15,7 +15,7 @@ object HtmlBuilder {
 
   // Adds validation method to a Field
   private def validationHelper(field: Field, validate: Boolean): String = field match {
-    case Submit(_, _, _) => ""
+    case Submit(_, _, _,_) => ""
     case _ => if (validate) " onblur=\"validate" + field.fname + "()\"" else ""
   }
 
@@ -56,16 +56,14 @@ object HtmlBuilder {
       case Nil => Value(vals._1, vals._2, vals._3, vals._4)
     }
     
-    def valType(value: Value) = value.valType match {
+    def valTypeHelper(value: Value) = value.valType match {
       case LengthValidation => ("Length", (d: Double) => d.toInt)
       case IntValidation => ("Integer", (d: Double) => d.toInt)
       case FloatValidation => ("Float", (d: Double) => d)
-    } 
-    
-    def formatNumber(d: Double) = d.toInt
+    }
 
     def valueString(value: Value): String = {
-      val (valueTypeString, numberFormat) = valType(value)
+      val (valueTypeString, numberFormat) = valTypeHelper(value)
       val l_start = start + valueTypeString + " must be "
       val l_end = end
       value match {
@@ -91,7 +89,6 @@ object HtmlBuilder {
     rules match {
       case Required :: xs => start + "Field is required" + end + reqHelper(xs, start, end)
       case Value(min, max, equals, valType) :: xs => valueString(valueHelper(xs, (min, max, equals, valType))) + reqHelper(xs.filter(r => (!isValue(r))), start, end)
-      case Matches(field) :: xs => start + "Must match " + field + end + reqHelper(xs, start, end)
       case Email :: xs => start + "Must be a valid email" + end + reqHelper(xs, start, end)
       case IP :: xs => start + "Must be a valid IP" + end + reqHelper(xs, start, end)
       case Integer :: xs => start + "Must be an integer" + end + reqHelper(xs, start, end)

@@ -68,7 +68,7 @@ trait Rules {
     val valType = FloatValidation
   }
 
-  object Length extends ValueHelper {
+  object StringLength extends ValueHelper {
     val valType = LengthValidation
   }
   
@@ -82,11 +82,5 @@ trait Rules {
 
   case object Required extends Rule {
     def validate(s: String) = !s.isEmpty()
-  }
-
-  // TODO Need to work on this
-  import dk.itu.formhelper.FormHelper.Field
-  final case class Matches(field: Field) extends Rule {
-    def validate(s: String) = false
   }
 }

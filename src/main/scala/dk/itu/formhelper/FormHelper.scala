@@ -3,15 +3,10 @@ package dk.itu.formhelper
 import dk.itu.formhelper.builders._ 
 
 object FormHelper extends Styles with Rules {
-  // TODO Refactor this into a HtmlHelper Trait
-  final case class FormHtml(form: Form) {
-    def plain = HtmlBuilder.plainHtml(form)
-    def withValidation = HtmlBuilder.htmlWithValidation(form)
-    def validationScript = "validation"
-  }
-  
   final case class Form(name: String, method: Method, action: String, fields: Field*) {
-    def html = FormHtml(this)
+    def html = HtmlBuilder.plainHtml(this)
+    def htmlWithValidation = HtmlBuilder.htmlWithValidation(this)
+    def jsValidationsScript = "validation"
     
     def validatedForm(postData: Option[Map[String, Seq[String]]]) : (Boolean, Form)= {
       val postForm = ScalaBuilder.formFromPost(this, postData)
@@ -19,6 +14,9 @@ object FormHelper extends Styles with Rules {
       (boolean,postForm)
     }
   }
+  
+  final case class Match(fieldId: String)
+  implicit def liftString(fieldId: String) = new Match(fieldId)
   
   trait Method
   case object Get extends Method
@@ -29,49 +27,55 @@ object FormHelper extends Styles with Rules {
     def value: String
     val styles: List[Style]
     val rules: List[Rule]
+    val matches: List[Match]
     
     def addRule(r: Rule): Field
     def addStyle(s: Style): Field
+    def addMatch(m: Match): Field
     def setValue(v: String): Field
     
     def id: String
-    def html: String = HtmlBuilder.htmlField(this, false)
     def inputType: String
+    
+    def html: String = HtmlBuilder.htmlField(this, false)
+    def htmlWithValidation: String = HtmlBuilder.htmlField(this, true)
+    def jsValidationsScript: String = "validation"
   }
   
-  case class Submit(fname: String = "", styles: List[Style] = Nil, rules: List[Rule] = Nil) extends Field {
+  case class Submit(fname: String = "", styles: List[Style] = Nil, rules: List[Rule] = Nil, matches: List[Match] = Nil) extends Field {
     def addRule(r: Rule) = this
     def addStyle(s: Style) = this
+    def addMatch(m: Match) = this
     def setValue(v: String) = this
     def id = fname
     def inputType = "submit"
     def value = fname
   }
   
-  case class Text(fname: String, value: String = "", styles: List[Style] = Nil, rules: List[Rule] = Nil) extends Field {
-    def addRule(r: Rule): Text = Text(fname, value, styles, r ::  rules)
-    def addStyle(s: Style): Text = Text(fname, value, s ::  styles, rules)
-    def setValue(v: String): Text = Text(fname, v, styles, rules)
-    def matches(that: Text) = Text(fname, value, styles, Matches(that) :: rules)
+  case class Text(fname: String, value: String = "", styles: List[Style] = Nil, rules: List[Rule] = Nil, matches: List[Match] = Nil) extends Field {
+    def addRule(r: Rule): Text = Text(fname, value, styles, r ::  rules, matches)
+    def addStyle(s: Style): Text = Text(fname, value, s ::  styles, rules, matches)
+    def addMatch(m: Match): Text = Text(fname, value, styles, rules, m :: matches)
+    def setValue(v: String): Text = Text(fname, v, styles, rules, matches)
     def id = fname
     def inputType = "text"
   }
 
-  case class Password(fname: String, value: String = "", styles: List[Style] = Nil, rules: List[Rule] = Nil) extends Field {
-    def addRule(r: Rule): Password = Password(fname, value, styles, r :: rules)
-    def addStyle(s: Style): Password = Password(fname, value, s :: styles, rules)
-    def setValue(v: String): Password = Password(fname, v, styles, rules)
-    def matches(that: Password) = Password(fname, value, styles, Matches(that) :: rules)
+  case class Password(fname: String, value: String = "", styles: List[Style] = Nil, rules: List[Rule] = Nil, matches: List[Match] = Nil) extends Field {
+    def addRule(r: Rule): Password = Password(fname, value, styles, r :: rules, matches)
+    def addStyle(s: Style): Password = Password(fname, value, s :: styles, rules, matches)
+    def addMatch(m: Match): Password = Password(fname, value, styles, rules, m :: matches)
+    def setValue(v: String): Password = Password(fname, v, styles, rules, matches)
     def id = fname
     def inputType = "password"
   }
 
   // fname is the group name for a Radio button group
-  case class Radio(fname: String, value: String, styles: List[Style] = Nil, rules: List[Rule] = Nil) extends Field {
-    def addRule(r: Rule): Radio = Radio(fname, value, styles, r :: rules)
-    def addStyle(s: Style): Radio = Radio(fname, value, s :: styles, rules)
-    def setValue(v: String): Radio = Radio(fname, value, Checked :: styles, rules)
-    def matches(that: Radio) = Radio(fname, value, styles, Matches(that) :: rules)
+  case class Radio(fname: String, value: String, styles: List[Style] = Nil, rules: List[Rule] = Nil, matches: List[Match] = Nil) extends Field {
+    def addRule(r: Rule): Radio = Radio(fname, value, styles, r :: rules, matches)
+    def addStyle(s: Style): Radio = Radio(fname, value, s :: styles, rules, matches)
+    def addMatch(m: Match): Radio = Radio(fname, value, styles, rules, m :: matches)
+    def setValue(v: String): Radio = Radio(fname, value, Checked :: styles, rules, matches)
     def id = fname+value
     def inputType = "radio"
   }
