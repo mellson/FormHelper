@@ -2,43 +2,7 @@ package dk.itu.formhelper.builders
 import dk.itu.formhelper.FormHelper._
 
 object ScalaBuilder {
-  private def fieldRuleValidator(field: Field, rule: Rule, form: Form): Boolean = (field, rule) match {
-    case (Radio(_, _, _, _, _), Required) => !form.fields.filter(f => f.fname == field.fname).filter(f => f.styles.contains(Checked)).isEmpty
-    case _ => rule.validate(field.value)
-  }
-  
-  private def comparisonHelper(comparison: CompareType, value1: String, value2: String): Boolean = comparison match {
-    case Below => value1 < value2
-    case BelowOrEqual => value1 <= value2
-    case Above => value1 > value2
-    case AboveOrEqual => value1 >= value2
-    case Equal => value1 == value2
-  }
-  
-  private def lengthComparisonHelper(comparison: CompareType, value1: Int, value2: Int): Boolean = comparison match {
-    case Below => value1 < value2
-    case BelowOrEqual => value1 <= value2
-    case Above => value1 > value2
-    case AboveOrEqual => value1 >= value2
-    case Equal => value1 == value2
-  }
-  
-  private def matchValidator(m: Match, value1: String, value2: String): Boolean = m match {
-    case Matcher(_,comparison,matchType) => matchType match {
-      case LengthMatch => lengthComparisonHelper(comparison, value1.length, value2.length)
-      case ValueMatch => comparisonHelper(comparison, value1, value2)
-    } 
-      
-  }
-
-  private def fieldMatchValidator(field: Field, form: Form): Boolean = {
-    val matches = for {
-      matchId <- field.matches
-      fieldMatch <- form.fields.filter(f => f.id == matchId.fieldId)
-    } yield matchValidator(matchId, field.value, fieldMatch.value)
-    !matches.contains(false)
-  }
-
+  // Validate rules and matches on a field
   def validateField(field: Field, form: Form): Boolean = {
     val ruleBooleans = for {
       field <- form.fields
@@ -46,10 +10,10 @@ object ScalaBuilder {
     } yield fieldRuleValidator(field, rule, form)
 
     val matchBoolean = fieldMatchValidator(field, form)
-
     !ruleBooleans.contains(false) && matchBoolean
   }
 
+  // Validate rule and matches on a form
   def validateForm(form: Form): Boolean = {
     val matchBooleans = for {
       field <- form.fields
@@ -92,5 +56,40 @@ object ScalaBuilder {
 
       Form(form.name, form.method, form.action, newFields: _*)
     } else form
+  }
+  
+    // Helper method for fieldMatchValidator
+  private def matchValidatorHelper(m: Match, value1: String, value2: String): Boolean = m match {
+    case Matcher(_, comparison, matchType) => matchType match {
+      case LengthMatch => comparison match {
+        case Below => value1.length < value2.length
+        case BelowOrEqual => value1.length <= value2.length
+        case Above => value1.length > value2.length
+        case AboveOrEqual => value1.length >= value2.length
+        case Equal => value1.length == value2.length
+      }
+      case ValueMatch => comparison match {
+        case Below => value1 < value2
+        case BelowOrEqual => value1 <= value2
+        case Above => value1 > value2
+        case AboveOrEqual => value1 >= value2
+        case Equal => value1 == value2
+      }
+    }
+  }
+  
+  // Validate all rules on a field
+  private def fieldRuleValidator(field: Field, rule: Rule, form: Form): Boolean = (field, rule) match {
+    case (Radio(_, _, _, _, _), Required) => !form.fields.filter(f => f.fname == field.fname).filter(f => f.styles.contains(Checked)).isEmpty
+    case _ => rule.validate(field.value)
+  }
+
+  // Validate all matches on a field
+  private def fieldMatchValidator(field: Field, form: Form): Boolean = {
+    val matches = for {
+      matchId <- field.matches
+      fieldMatch <- form.fields.filter(f => f.id == matchId.fieldId)
+    } yield matchValidatorHelper(matchId, field.value, fieldMatch.value)
+    !matches.contains(false)
   }
 }
