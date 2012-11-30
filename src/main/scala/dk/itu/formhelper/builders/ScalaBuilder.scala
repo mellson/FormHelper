@@ -2,28 +2,44 @@ package dk.itu.formhelper.builders
 import dk.itu.formhelper.FormHelper._
 
 object ScalaBuilder {
-  def validateForm(form: Form): Boolean = {
-    def fieldValidator(field: Field, rule: Rule) = (field, rule) match {
-      case (Radio(_, _, _, _, _), Required) => !form.fields.filter(f => f.fname == field.fname).filter(f => f.styles.contains(Checked)).isEmpty
-      case _ => rule.validate(field.value)
-    }
+  private def fieldRuleValidator(field: Field, rule: Rule, form: Form): Boolean = (field, rule) match {
+    case (Radio(_, _, _, _, _), Required) => !form.fields.filter(f => f.fname == field.fname).filter(f => f.styles.contains(Checked)).isEmpty
+    case _ => rule.validate(field.value)
+  }
 
-    val matchBooleans = for {
-      field <- form.fields
+  private def fieldMatchValidator(field: Field, form: Form): Boolean = {
+    val matches = for {
       matchId <- field.matches
       fieldMatch <- form.fields.filter(f => f.id == matchId.fieldId)
     } yield fieldMatch.value == field.value
-    
+    !matches.contains(false)
+  }
+
+  def validateField(field: Field, form: Form): Boolean = {
+    val ruleBooleans = for {
+      field <- form.fields
+      rule <- field.rules
+    } yield fieldRuleValidator(field, rule, form)
+
+    val matchBoolean = fieldMatchValidator(field, form)
+
+    !ruleBooleans.contains(false) && matchBoolean
+  }
+
+  def validateForm(form: Form): Boolean = {
+    val matchBooleans = for {
+      field <- form.fields
+    } yield fieldMatchValidator(field, form)
+
     val booleans = for {
       field <- form.fields
       rule <- field.rules
-    } yield fieldValidator(field, rule)
-    
+    } yield fieldRuleValidator(field, rule, form)
+
     !booleans.contains(false) && !matchBooleans.contains(false)
   }
 
   def formFromPost(form: Form, postData: Option[Map[String, Seq[String]]]): Form = {
-
     // Checks if the data value should be added. Need this check because Radio fields are a bit weird.
     def dataHelper(field: Field, data: String, fname: String) = field match {
       case Radio(groupname, value, _, _, _) =>
@@ -47,7 +63,7 @@ object ScalaBuilder {
         field <- form.fields
         newfields = if (!dataFields.filter(f => f.id == field.id).isEmpty) dataFields.filter(f => f.id == field.id) else List(field)
         newfield <- newfields
-        f = if (newfield.rules.filter(rule => (!rule.validate(newfield.value))).isEmpty) newfield else newfield addStyle ShowErrors
+        f = if (validateField(field, form)) newfield else newfield addStyle ShowErrors
       } yield f
 
       Form(form.name, form.method, form.action, newFields: _*)
