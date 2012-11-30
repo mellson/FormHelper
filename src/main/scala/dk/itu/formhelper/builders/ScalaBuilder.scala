@@ -6,12 +6,36 @@ object ScalaBuilder {
     case (Radio(_, _, _, _, _), Required) => !form.fields.filter(f => f.fname == field.fname).filter(f => f.styles.contains(Checked)).isEmpty
     case _ => rule.validate(field.value)
   }
+  
+  private def comparisonHelper(comparison: CompareType, value1: String, value2: String): Boolean = comparison match {
+    case Below => value1 < value2
+    case BelowOrEqual => value1 <= value2
+    case Above => value1 > value2
+    case AboveOrEqual => value1 >= value2
+    case Equal => value1 == value2
+  }
+  
+  private def lengthComparisonHelper(comparison: CompareType, value1: Int, value2: Int): Boolean = comparison match {
+    case Below => value1 < value2
+    case BelowOrEqual => value1 <= value2
+    case Above => value1 > value2
+    case AboveOrEqual => value1 >= value2
+    case Equal => value1 == value2
+  }
+  
+  private def matchValidator(m: Match, value1: String, value2: String): Boolean = m match {
+    case Matcher(_,comparison,matchType) => matchType match {
+      case LengthMatch => lengthComparisonHelper(comparison, value1.length, value2.length)
+      case ValueMatch => comparisonHelper(comparison, value1, value2)
+    } 
+      
+  }
 
   private def fieldMatchValidator(field: Field, form: Form): Boolean = {
     val matches = for {
       matchId <- field.matches
       fieldMatch <- form.fields.filter(f => f.id == matchId.fieldId)
-    } yield fieldMatch.value == field.value
+    } yield matchValidator(matchId, field.value, fieldMatch.value)
     !matches.contains(false)
   }
 

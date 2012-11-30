@@ -28,7 +28,7 @@ trait Rules {
   case object FloatValidation extends ValidationType
   case object LengthValidation extends ValidationType
 
-  final case class Value(min: Double, max: Double, equals: Double, valType: ValidationType) extends Rule {
+  final case class ValueRule(min: Double, max: Double, equals: Double, valType: ValidationType) extends Rule {
     def validate(s: String): Boolean = {
       def getValue(s: String) = valType match {
         case IntValidation =>
@@ -53,11 +53,11 @@ trait Rules {
   
   trait ValueHelper {
     val valType: ValidationType
-    def >(n: Double) = Value(min = n, max = -1, equals = -1, valType)
-    def >=(n: Double) = Value(min = n, max = -1, equals = n, valType)
-    def <(n: Double) = Value(min = -1, max = n, equals = -1, valType)
-    def <=(n: Double) = Value(min = -1, max = n, equals = n, valType)
-    def ==(n: Double) = Value(min = -1, max = -1, equals = n, valType)
+    def >(n: Double) = ValueRule(min = n, max = -1, equals = -1, valType)
+    def >=(n: Double) = ValueRule(min = n, max = -1, equals = n, valType)
+    def <(n: Double) = ValueRule(min = -1, max = n, equals = -1, valType)
+    def <=(n: Double) = ValueRule(min = -1, max = n, equals = n, valType)
+    def ==(n: Double) = ValueRule(min = -1, max = -1, equals = n, valType)
   }
 
   object IntValue extends ValueHelper {

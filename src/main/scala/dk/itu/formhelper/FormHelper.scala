@@ -2,7 +2,7 @@ package dk.itu.formhelper
 
 import dk.itu.formhelper.builders._ 
 
-object FormHelper extends Styles with Rules {
+object FormHelper extends Styles with Rules with Matches {
   final case class Form(name: String, method: Method, action: String, fields: Field*) {
     def html = HtmlBuilder.plainHtml(this)
     def htmlWithValidation = HtmlBuilder.htmlWithValidation(this)
@@ -14,9 +14,6 @@ object FormHelper extends Styles with Rules {
       (boolean,postForm)
     }
   }
-  
-  final case class Match(fieldId: String)
-  implicit def liftString(fieldId: String) = new Match(fieldId)
   
   trait Method
   case object Get extends Method

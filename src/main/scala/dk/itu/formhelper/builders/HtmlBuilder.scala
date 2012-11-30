@@ -46,31 +46,31 @@ object HtmlBuilder {
 
   // Build HTML for requirements
   private def reqHelper(rules: List[Rule], start: String, end: String): String = {
-    def valueHelper(rules2: List[Rule], vals: (Double, Double, Double, ValidationType)): Value = rules2 match {
-      case Value(min1, max1, equals1, valType) :: xs =>
+    def valueHelper(rules2: List[Rule], vals: (Double, Double, Double, ValidationType)): ValueRule = rules2 match {
+      case ValueRule(min1, max1, equals1, valType) :: xs =>
         val min2 = min1 max vals._1
         val max2 = max1 max vals._2
         val equals2 = equals1 max vals._3
         valueHelper(xs, (min2, max2, equals2, valType))
       case _ :: xs => valueHelper(xs, vals)
-      case Nil => Value(vals._1, vals._2, vals._3, vals._4)
+      case Nil => ValueRule(vals._1, vals._2, vals._3, vals._4)
     }
     
-    def valTypeHelper(value: Value) = value.valType match {
+    def valTypeHelper(value: ValueRule) = value.valType match {
       case LengthValidation => ("Length", (d: Double) => d.toInt)
       case IntValidation => ("Integer", (d: Double) => d.toInt)
       case FloatValidation => ("Float", (d: Double) => d)
     }
 
-    def valueString(value: Value): String = {
+    def valueString(value: ValueRule): String = {
       val (valueTypeString, numberFormat) = valTypeHelper(value)
       val l_start = start + valueTypeString + " must be "
       val l_end = end
       value match {
-        case Value(min, -1, -1, valType) => l_start + "greater-than " + numberFormat(min) + l_end
-        case Value(-1, max, -1, valType) => l_start + "less-than " + numberFormat(max) + l_end
-        case Value(min, max, -1, valType) => l_start + "greater-than " + numberFormat(min) + " and less-than " + numberFormat(max) + l_end
-        case Value(min, max, equals, valType) =>
+        case ValueRule(min, -1, -1, valType) => l_start + "greater-than " + numberFormat(min) + l_end
+        case ValueRule(-1, max, -1, valType) => l_start + "less-than " + numberFormat(max) + l_end
+        case ValueRule(min, max, -1, valType) => l_start + "greater-than " + numberFormat(min) + " and less-than " + numberFormat(max) + l_end
+        case ValueRule(min, max, equals, valType) =>
           if (equals == min)
             if (max == -1) l_start + "greater-than or equal to " + numberFormat(equals) + l_end
             else l_start + "greater-than or equal to " + numberFormat(equals) + " and less-than " + numberFormat(max) + l_end
@@ -82,13 +82,13 @@ object HtmlBuilder {
     }
 
     def isValue(r: Rule) = r match {
-      case Value(_, _, _, _) => true
+      case ValueRule(_, _, _, _) => true
       case _ => false
     }
 
     rules match {
       case Required :: xs => start + "Field is required" + end + reqHelper(xs, start, end)
-      case Value(min, max, equals, valType) :: xs => valueString(valueHelper(xs, (min, max, equals, valType))) + reqHelper(xs.filter(r => (!isValue(r))), start, end)
+      case ValueRule(min, max, equals, valType) :: xs => valueString(valueHelper(xs, (min, max, equals, valType))) + reqHelper(xs.filter(r => (!isValue(r))), start, end)
       case Email :: xs => start + "Must be a valid email" + end + reqHelper(xs, start, end)
       case IP :: xs => start + "Must be a valid IP" + end + reqHelper(xs, start, end)
       case Integer :: xs => start + "Must be an integer" + end + reqHelper(xs, start, end)
