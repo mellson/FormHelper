@@ -5,10 +5,6 @@ trait Matches {
     def fieldId: String
   }
   
-  trait MatchType
-  case object LengthMatch extends MatchType
-  case object ValueMatch extends MatchType
-  
   trait CompareType
   case object Below extends CompareType
   case object BelowOrEqual extends CompareType
@@ -16,22 +12,17 @@ trait Matches {
   case object AboveOrEqual extends CompareType
   case object Equal extends CompareType
 
-  final case class Matcher(fieldId: String, comparison: CompareType, matchType: MatchType) extends Match
+  final case class Matcher(fieldId: String, comparison: CompareType, matchType: MatchHelper) extends Match
   
   trait MatchHelper {
-    val matchType: MatchType
-    def <(fieldId: String) = Matcher(fieldId, Below, matchType)
-    def <=(fieldId: String) = Matcher(fieldId, BelowOrEqual, matchType)
-    def >(fieldId: String) = Matcher(fieldId, Above, matchType)
-    def >=(fieldId: String) = Matcher(fieldId, AboveOrEqual, matchType)
-    def ==(fieldId: String) = Matcher(fieldId, Equal, matchType)
+    def <(fieldId: String) = Matcher(fieldId, Below, this)
+    def <=(fieldId: String) = Matcher(fieldId, BelowOrEqual, this)
+    def >(fieldId: String) = Matcher(fieldId, Above, this)
+    def >=(fieldId: String) = Matcher(fieldId, AboveOrEqual, this)
+    def ==(fieldId: String) = Matcher(fieldId, Equal, this)
   }
   
-  object Length extends MatchHelper {
-    val matchType = LengthMatch
-  }
+  case object Length extends MatchHelper
+  case object Value extends MatchHelper
   
-  object Value extends MatchHelper {
-    val matchType = ValueMatch
-  }
 }

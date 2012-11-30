@@ -3,12 +3,15 @@ import dk.itu.formhelper.FormHelper._
 
 object ScalaBuilder {
   // Validate rules and matches on a field
+  // TODO Fix errors here, field value validates the rule even though it is wrong
   def validateField(field: Field, form: Form): Boolean = {
     val ruleBooleans = for {
-      field <- form.fields
       rule <- field.rules
     } yield fieldRuleValidator(field, rule, form)
 
+    for (r <- field.rules)
+      println("validated : " + r.validate(field.value))
+      
     val matchBoolean = fieldMatchValidator(field, form)
     !ruleBooleans.contains(false) && matchBoolean
   }
@@ -61,14 +64,14 @@ object ScalaBuilder {
     // Helper method for fieldMatchValidator
   private def matchValidatorHelper(m: Match, value1: String, value2: String): Boolean = m match {
     case Matcher(_, comparison, matchType) => matchType match {
-      case LengthMatch => comparison match {
+      case Length => comparison match {
         case Below => value1.length < value2.length
         case BelowOrEqual => value1.length <= value2.length
         case Above => value1.length > value2.length
         case AboveOrEqual => value1.length >= value2.length
         case Equal => value1.length == value2.length
       }
-      case ValueMatch => comparison match {
+      case Value => comparison match {
         case Below => value1 < value2
         case BelowOrEqual => value1 <= value2
         case Above => value1 > value2
