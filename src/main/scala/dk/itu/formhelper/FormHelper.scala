@@ -15,7 +15,7 @@ object FormHelper extends Styles with Rules with Matches {
     }
   }
   
-  trait Method
+  sealed abstract class Method
   case object Get extends Method
   case object Post extends Method
   
