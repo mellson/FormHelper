@@ -1,14 +1,16 @@
 package dk.itu.formhelper
 
 trait Styles {
-  trait Style
+  sealed abstract class Style {
+    def &&(style: Style) = AndStyle(this, style)
+  }
+  case class AndStyle(s1: Style, s2: Style) extends Style
 
   sealed trait Placement
   case object After extends Placement
   case object Before extends Placement
   case object Inside extends Placement
 
-  // TODO Should I rename to Custom Html ?
   final case class Label(label: String, placement: Placement) extends Style
   object Label extends Style {
     def <(label: String) = Label(label, Before)
@@ -16,14 +18,8 @@ trait Styles {
     def <>(label: String) = Label(label, Inside)
   }
 
-  object SameLine extends Style
-  
+  case object SameLine extends Style
   case object ShowRequirements extends Style
   case object ShowErrors extends Style
   case object Checked extends Style
-
-  final case class Error(msg: String) extends Style
-  case object Error extends Style {
-    def ==(msg: String) = Error(msg)
-  }
 }

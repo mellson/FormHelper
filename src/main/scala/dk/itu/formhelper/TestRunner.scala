@@ -1,20 +1,17 @@
 package dk.itu.formhelper
-import FormHelper._
+import dk.itu.formhelper.FormHelper._ 
 
 object TestRunner extends App {
-  val exform = Form(
-    name = "super form",
-    method = Post,
-    action = "/submit",
-    Text("username") addStyle Label <> "Name",
-    Password("age") addStyle Label <> "Age",
-    Radio("super","ja"),
-    Submit("Send info")
-    )
-    
-  val field = Text("username") addRule StringValue == "hej"
-//  println(field.htmlWithValidation)
-//
-//  println(exform.htmlWithValidation)
-  println(exform.fields.filter(f => f.id == "username"))
+  val form = Form(
+      name = "Form",
+      method = Post,
+      action = "/",
+      Text("username") withStyle Label <> "Hurra",
+      Password("password") withRule Length < 6, 
+      Radio("hurra", "super") setChecked(true) withStyle Label < "Super"
+      )
+  
+//  val field = Text("username") withRule Length === 5 withStyle Label > "hej" && ShowRequirements withRule Length < 40
+      
+  println(formHtml(form, false))
 }
