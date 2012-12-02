@@ -58,7 +58,6 @@ trait HtmlBuilder {
 
       case Error(err) :: xs => styleHelper(xs, html) + fieldErrorStart + err + fieldEnd
       case ShowRequirements :: xs => styleHelper(xs, html) + fieldInfoStart + field.rule.error + fieldEnd
-      case ShowErrors :: xs => styleHelper(xs, html) + fieldErrorStart + field.rule.error + fieldEnd
 
       // A field without styles
       case x :: xs => styleHelper(xs, html)
@@ -66,15 +65,7 @@ trait HtmlBuilder {
       case Nil => htmlStart + html + htmlEnd //htmlStart + htmlEnd
     }
 
-    // Removes ShowRequirements if the field has ShowErrors style. Also removes duplicate ShowErrors entries
-    def filterStyles(sl: List[Style]): List[Style] = {
-      if (sl.contains(ShowErrors)) sl.filter(s => s != ShowRequirements).distinct
-      else sl
-    }
-    // Get the list of styles from this fields style. Filter the error messages and sort the styles.
-    val styles: List[Style] = filterStyles(styleList(field.style)).sorted
-
-    styleHelper(styles, "")
+    styleHelper(styleList(field.style).sorted, "")
   }
 
   // Converts a style to a list of styles

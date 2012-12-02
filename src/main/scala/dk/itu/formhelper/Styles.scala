@@ -34,9 +34,6 @@ trait Styles {
   case object ShowRequirements extends Style {
     val compValue = 4
   }
-  case object ShowErrors extends Style {
-    val compValue = 5
-  }
   
   final case class Error(err: String) extends Style {
     val compValue = 6

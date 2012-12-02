@@ -1,6 +1,6 @@
 package dk.itu.formhelper
 
-import scala.language.implicitConversions
+//import scala.language.implicitConversions
 import dk.itu.formhelper.FormHelper._
 import scala.util.matching.Regex
 
