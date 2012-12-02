@@ -19,8 +19,7 @@ trait Rules {
   }
 
   implicit def liftIntToConst(n: Int): Const[Int] = Const(n)
-  implicit def liftIntToConstString(n: Int): Const[String] = Const(n.toString)
-  implicit def liftDoubleToConstString(n: Double): Const[String] = Const(n.toString)
+  implicit def liftDoubleToConst(n: Double): Const[Double] = Const(n)
   implicit def liftStringToConst(s: String): Const[String] = Const(s)
   case class Const[T](value: T) extends ComparableExpr[T] {
     def name = value.toString
@@ -32,18 +31,25 @@ trait Rules {
   }
   object Length extends Length(ThisField)
 
-  implicit def liftStringToValueRef(id: FieldRef): Value = Value(id)
-  case class Value(field: FieldRef) extends ComparableExpr[String] {
+  implicit def liftStringToValueRef(id: FieldRef): Value[String] = Value[String](id)
+  case class Value[T](field: FieldRef) extends ComparableExpr[T] {
     def name = field.name + "s value"
   }
-  object Value extends Value(ThisField)
+  object Value extends Value[String](ThisField)
+  object StringValue extends Value[String](ThisField)
+  object IntValue extends Value[Int](ThisField) {
+    override def name = field.name + "s integer value"
+  }
+  object DoubleValue extends Value[Double](ThisField) {
+    override def name = field.name + "s double value"
+  }
 
   case class Regex(regex: String) extends Expr[String] {
     def name = regex
     def ===(that: Regex): Rule = new matchRegex(this, that)
     def !==(that: Regex): Rule = new dontMatchRegex(this, that)
   }
-  
+
   sealed abstract class Rule {
     def error: String
     def withError(err: => String) = ErrorRule(this, err)
@@ -51,9 +57,14 @@ trait Rules {
     def andThen(rule: => Rule) = &&(rule)
   }
 
-  // TODO are these right?
-  case class OK(r: Rule, error: String) extends Rule
-  case class FAIL(r: Rule, error: String) extends Rule
+  case class OK(error:String) extends Rule
+  object OK extends OK(error = " OK ")
+  
+  case class FAIL(error:String) extends Rule
+  object FAIL extends FAIL(error = " FAIL ")
+  
+  case class Required(error:String) extends Rule
+  object Required extends Required(error = " required ")
 
   case class ErrorRule(r: Rule, error: String) extends Rule
   case class AndRule(r1: Rule, r2: Rule) extends Rule {

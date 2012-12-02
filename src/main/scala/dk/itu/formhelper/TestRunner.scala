@@ -6,12 +6,10 @@ object TestRunner extends App {
       name = "Form",
       method = Post,
       action = "/",
-      Text("username") withStyle Label <> "Hurra",
-      Password("password") withRule Length < 6, 
-      Radio("hurra", "super") setChecked(true) withStyle Label < "Super"
+      Text("username") withRule Length === 4,
+      Password("password") withRule Length < 6 
       )
   
-//  val field = Text("username") withRule Length === 5 withStyle Label > "hej" && ShowRequirements withRule Length < 40
       
   println(formHtml(form, false))
 }

@@ -30,11 +30,6 @@ trait HtmlBuilder {
     newLineHelper(form.fields.toList, "<form name=\"" + form.name + "\" " + methodHelper(form.method) + " action=\"" + form.action + "\"" + validation + ">\n")
   }
 
-  def styleList(style: Style): List[Style] = style match {
-    case AndStyle(s1,s2) => styleList(s1) ++ styleList(s2)
-    case s => List(s)
-  }
-  
   def fieldHtml(field: Field, validate: Boolean): String = {
     // Adds validation method to a Field
     def validationHelper(field: Field, validate: Boolean): String = field match {
@@ -52,23 +47,45 @@ trait HtmlBuilder {
     val fieldEnd = "</field_message>"
 
     def styleHelper(styles: List[Style], html: String): String = styles match {
-      case Label(label, placement)::xs => placement match {
+      case Label(label, placement) :: xs => placement match {
         case Before => label + styleHelper(xs, html)
         case After => styleHelper(xs, html) + label
         // HTML 5 feature
         case Inside => styleHelper(xs, html + " placeholder=\"" + label + "\"")
       }
       // Radio button checked
-      case Checked::xs => styleHelper(xs, html + " checked")
+      case Checked :: xs => styleHelper(xs, html + " checked")
 
-      case ShowRequirements::xs => styleHelper(xs, html) + fieldInfoStart + field.rule.error + fieldEnd
-      case ShowErrors::xs => styleHelper(xs, html) + fieldErrorStart + field.rule.error + fieldEnd
-      
+      case Error(err) :: xs => styleHelper(xs, html) + fieldErrorStart + err + fieldEnd
+      case ShowRequirements :: xs => styleHelper(xs, html) + fieldInfoStart + field.rule.error + fieldEnd
+      case ShowErrors :: xs => styleHelper(xs, html) + fieldErrorStart + field.rule.error + fieldEnd
+
       // A field without styles
-      case x::xs => styleHelper(xs, html)
-      
+      case x :: xs => styleHelper(xs, html)
+
       case Nil => htmlStart + html + htmlEnd //htmlStart + htmlEnd
     }
-    styleHelper(styleList(field.style), "")
+
+    // Removes ShowRequirements if the field has ShowErrors style. Also removes duplicate ShowErrors entries
+    def filterStyles(sl: List[Style]): List[Style] = {
+      if (sl.contains(ShowErrors)) sl.filter(s => s != ShowRequirements).distinct
+      else sl
+    }
+    // Get the list of styles from this fields style. Filter the error messages and sort the styles.
+    val styles: List[Style] = filterStyles(styleList(field.style)).sorted
+
+    styleHelper(styles, "")
+  }
+
+  // Converts a style to a list of styles
+  def styleList(style: Style): List[Style] = style match {
+    case AndStyle(s1, s2) => styleList(s1) ++ styleList(s2)
+    case s => List(s)
+  }
+  
+  // Converts a rule to a list of rules
+  def ruleList(rule: Rule): List[Rule] = rule match {
+    case AndRule(r1, r2) => ruleList(r1) ++ ruleList(r2)
+    case r => List(r)
   }
 }
