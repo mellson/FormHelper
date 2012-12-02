@@ -67,7 +67,8 @@ object ScalaBuilder {
         field <- form.fields.map(f => addGroupRequired(f))
         newfields = if (!dataFields.filter(f => f.id == field.id).isEmpty) dataFields.filter(f => f.id == field.id) else List(field)
         newfield <- newfields
-        f = if (fieldEval(newfield.rule, newfield, tempForm) == None) newfield else newfield withStyle Error === fieldEval(newfield.rule, newfield, tempForm).get
+        error = fieldEval(newfield.rule, newfield, tempForm)
+        f = if (error == None) newfield else newfield withStyle Error === error.get
       } yield f
 
       Form(form.name, form.method, form.action, errorFields: _*)
