@@ -1,6 +1,7 @@
 package dk.itu.formhelper
 
 import dk.itu.formhelper.FormHelper._
+import scala.util.matching.Regex
 
 object Validator {
   def fieldEval(rule: Rule, field: Field, form: Form): Option[String] = field match {
@@ -53,53 +54,54 @@ object Validator {
           !booleans.contains(false)
       }
       rule match {
-        case <(Length(ThisField), Const(n: Int))   => if (field.value.length < n) None else Some(rule.error)
-        case <=(Length(ThisField), Const(n: Int))  => if (field.value.length <= n) None else Some(rule.error)
-        case >(Length(ThisField), Const(n: Int))   => if (field.value.length > n) None else Some(rule.error)
-        case >=(Length(ThisField), Const(n: Int))  => if (field.value.length >= n) None else Some(rule.error)
-        case ===(Length(ThisField), Const(n: Int)) => if (field.value.length == n) None else Some(rule.error)
+        case <(Length(ThisField), Const(n: Int))     => if (field.value.length < n) None else Some(rule.error)
+        case <=(Length(ThisField), Const(n: Int))    => if (field.value.length <= n) None else Some(rule.error)
+        case >(Length(ThisField), Const(n: Int))     => if (field.value.length > n) None else Some(rule.error)
+        case >=(Length(ThisField), Const(n: Int))    => if (field.value.length >= n) None else Some(rule.error)
+        case ===(Length(ThisField), Const(n: Int))   => if (field.value.length == n) None else Some(rule.error)
 
-        case <(Length(ThisField), Length(ref))     => if (refHelper(ref, field.value.length, Below, (s: String) => s.length)) None else Some(rule.error)
-        case <=(Length(ThisField), Length(ref))    => if (refHelper(ref, field.value.length, BelowOrEqual, (s: String) => s.length)) None else Some(rule.error)
-        case >(Length(ThisField), Length(ref))     => if (refHelper(ref, field.value.length, Above, (s: String) => s.length)) None else Some(rule.error)
-        case >=(Length(ThisField), Length(ref))    => if (refHelper(ref, field.value.length, AboveOrEqual, (s: String) => s.length)) None else Some(rule.error)
-        case ===(Length(ThisField), Length(ref))   => if (refHelper(ref, field.value.length, Equal, (s: String) => s.length)) None else Some(rule.error)
+        case <(Length(ThisField), Length(ref))       => if (refHelper(ref, field.value.length, Below, (s: String) => s.length)) None else Some(rule.error)
+        case <=(Length(ThisField), Length(ref))      => if (refHelper(ref, field.value.length, BelowOrEqual, (s: String) => s.length)) None else Some(rule.error)
+        case >(Length(ThisField), Length(ref))       => if (refHelper(ref, field.value.length, Above, (s: String) => s.length)) None else Some(rule.error)
+        case >=(Length(ThisField), Length(ref))      => if (refHelper(ref, field.value.length, AboveOrEqual, (s: String) => s.length)) None else Some(rule.error)
+        case ===(Length(ThisField), Length(ref))     => if (refHelper(ref, field.value.length, Equal, (s: String) => s.length)) None else Some(rule.error)
 
-        case <(Value(ThisField), Const(n: Int))          => if (field.value.toInt<n) None else Some(rule.error)
-        case <=(Value(ThisField), Const(n: Int))         => if (field.value.toInt<=n) None else Some(rule.error)
-        case >(Value(ThisField), Const(n: Int))          => if (field.value.toInt>n) None else Some(rule.error)
-        case >=(Value(ThisField), Const(n: Int))         => if (field.value.toInt>=n) None else Some(rule.error)
-        case ===(Value(ThisField), Const(n: Int))        => if (field.value.toInt==n) None else Some(rule.error)
-        
-        case <(Value(ThisField), Const(n: Double))       => if (field.value.toDouble<n) None else Some(rule.error)
-        case <=(Value(ThisField), Const(n: Double))      => if (field.value.toDouble<=n) None else Some(rule.error)
-        case >(Value(ThisField), Const(n: Double))       => if (field.value.toDouble>n) None else Some(rule.error)
-        case >=(Value(ThisField), Const(n: Double))      => if (field.value.toDouble>=n) None else Some(rule.error)
-        case ===(Value(ThisField), Const(n: Double))     => if (field.value.toDouble==n) None else Some(rule.error)
-        
-        case <(Value(ThisField), Const(n: String))       => if (field.value<n) None else Some(rule.error)
-        case <=(Value(ThisField), Const(n: String))      => if (field.value<=n) None else Some(rule.error)
-        case >(Value(ThisField), Const(n: String))       => if (field.value>n) None else Some(rule.error)
-        case >=(Value(ThisField), Const(n: String))      => if (field.value>=n) None else Some(rule.error)
-        case ===(Value(ThisField), Const(n: String))     => if (field.value==n) None else Some(rule.error)
-        
-        case <(Value(ThisField), Value(ref))     => if (refHelper(ref, field.value, Below, (s: String) => s)) None else Some(rule.error)
-        case <=(Value(ThisField), Value(ref))    => if (refHelper(ref, field.value, BelowOrEqual, (s: String) => s)) None else Some(rule.error)
-        case >(Value(ThisField), Value(ref))     => if (refHelper(ref, field.value, Above, (s: String) => s)) None else Some(rule.error)
-        case >=(Value(ThisField), Value(ref))    => if (refHelper(ref, field.value, AboveOrEqual, (s: String) => s)) None else Some(rule.error)
-        case ===(Value(ThisField), Value(ref))   => if (refHelper(ref, field.value, Equal, (s: String) => s)) None else Some(rule.error)
+        case <(Value(ThisField), Const(n: Int))      => if (field.value.toInt < n) None else Some(rule.error)
+        case <=(Value(ThisField), Const(n: Int))     => if (field.value.toInt <= n) None else Some(rule.error)
+        case >(Value(ThisField), Const(n: Int))      => if (field.value.toInt > n) None else Some(rule.error)
+        case >=(Value(ThisField), Const(n: Int))     => if (field.value.toInt >= n) None else Some(rule.error)
+        case ===(Value(ThisField), Const(n: Int))    => if (field.value.toInt == n) None else Some(rule.error)
 
-        //        case Regex(regex) => None
+        case <(Value(ThisField), Const(n: Double))   => if (field.value.toDouble < n) None else Some(rule.error)
+        case <=(Value(ThisField), Const(n: Double))  => if (field.value.toDouble <= n) None else Some(rule.error)
+        case >(Value(ThisField), Const(n: Double))   => if (field.value.toDouble > n) None else Some(rule.error)
+        case >=(Value(ThisField), Const(n: Double))  => if (field.value.toDouble >= n) None else Some(rule.error)
+        case ===(Value(ThisField), Const(n: Double)) => if (field.value.toDouble == n) None else Some(rule.error)
 
-        case OK(err)                               => None
-        case FAIL(err)                             => Some(err)
-        case Required(err)                         => if (!field.value.isEmpty) None else Some(err)
+        case <(Value(ThisField), Const(n: String))   => if (field.value < n) None else Some(rule.error)
+        case <=(Value(ThisField), Const(n: String))  => if (field.value <= n) None else Some(rule.error)
+        case >(Value(ThisField), Const(n: String))   => if (field.value > n) None else Some(rule.error)
+        case >=(Value(ThisField), Const(n: String))  => if (field.value >= n) None else Some(rule.error)
+        case ===(Value(ThisField), Const(n: String)) => if (field.value == n) None else Some(rule.error)
 
-        case AndRule(r1, r2)                       => if (fieldEval(r1, field, form) == None) if (fieldEval(r2, field, form) == None) None else Some(r2.error) else Some(r1.error)
+        case <(Value(ThisField), Value(ref))         => if (refHelper(ref, field.value, Below, (s: String) => s)) None else Some(rule.error)
+        case <=(Value(ThisField), Value(ref))        => if (refHelper(ref, field.value, BelowOrEqual, (s: String) => s)) None else Some(rule.error)
+        case >(Value(ThisField), Value(ref))         => if (refHelper(ref, field.value, Above, (s: String) => s)) None else Some(rule.error)
+        case >=(Value(ThisField), Value(ref))        => if (refHelper(ref, field.value, AboveOrEqual, (s: String) => s)) None else Some(rule.error)
+        case ===(Value(ThisField), Value(ref))       => if (refHelper(ref, field.value, Equal, (s: String) => s)) None else Some(rule.error)
 
-        case ErrorRule(rule, err)                  => if (fieldEval(rule, field, form) == None) None else Some(err)
+        case MatchRegex(regex)                       => if (field.value.matches(regex)) None else Some(rule.error)
+        case DontMatchRegex(regex)                   => if (!field.value.matches(regex)) None else Some(rule.error)
 
-        case _                                     => Some("unknown error in Validator.Scala")
+        case OK(err)                                 => None
+        case FAIL(err)                               => Some(err)
+        case Required(err)                           => if (!field.value.isEmpty) None else Some(err)
+
+        case AndRule(r1, r2)                         => if (fieldEval(r1, field, form) == None) if (fieldEval(r2, field, form) == None) None else Some(r2.error) else Some(r1.error)
+
+        case ErrorRule(rule, err)                    => if (fieldEval(rule, field, form) == None) None else Some(err)
+
+        case _                                       => Some("unknown error in Validator.Scala")
       }
     }
   }

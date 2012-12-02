@@ -44,17 +44,6 @@ trait Rules {
     override def name = field.name + "s double value"
   }
 
-  sealed abstract class RegexExpr extends Expr[String] {
-    def ===(that: RegexExpr): Rule = new matchRegex(this, that)
-    def !==(that: RegexExpr): Rule = new dontMatchRegex(this, that)
-  }
-  case class Regex(regex: String) extends RegexExpr {
-    def name = ThisField.name + regex
-  }
-//  object Regex extends RegexExpr {
-//    
-//  }
-
   sealed abstract class Rule {
     def error: String
     def withError(err: => String) = ErrorRule(this, err)
@@ -62,19 +51,37 @@ trait Rules {
     def andThen(rule: => Rule) = &&(rule)
   }
 
-  case class OK(error:String) extends Rule
+  case class OK(error: String) extends Rule
   object OK extends OK(error = " OK ")
-  
-  case class FAIL(error:String) extends Rule
+
+  case class FAIL(error: String) extends Rule
   object FAIL extends FAIL(error = " FAIL ")
-  
-  case class Required(error:String) extends Rule
+
+  case class Required(error: String) extends Rule
   object Required extends Required(error = " required ")
 
   case class ErrorRule(r: Rule, error: String) extends Rule
   case class AndRule(r1: Rule, r2: Rule) extends Rule {
     def error: String = r1.error + " and " + r2.error
   }
+
+  final case class MatchRegex(regex: String) extends Rule {
+    def error = " must match " + regex
+  }
+  final case class DontMatchRegex(regex: String) extends Rule {
+    def error = " must not match " + regex
+  }
+  object Regex {
+    def ===(regex: String) = MatchRegex(regex)
+    def !==(regex: String) = DontMatchRegex(regex)
+  }
+  
+  // Various strings to help build regular expressions
+  val Email = """^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$"""
+  val IP = """^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"""
+  val Integer = """^-?\d+$"""
+  val Float = """^-?(?:\d+|\d*\.\d+)$"""
+  val Alpha = """^\D+$"""
 
   // OPerator'S
   case class <[T](e1: Expr[T], e2: Expr[T]) extends Rule {
@@ -94,11 +101,5 @@ trait Rules {
   }
   case class !==[T](e1: Expr[T], e2: Expr[T]) extends Rule {
     def error = e1.name + " must not be equal to " + e2.name
-  }
-  case class matchRegex(r1: RegexExpr, r2: RegexExpr) extends Rule {
-    def error = r1.name + " must match " + r2.name
-  }
-  case class dontMatchRegex(r1: RegexExpr, r2: RegexExpr) extends Rule {
-    def error = r1.name + " must not match " + r2.name
   }
 }
