@@ -44,11 +44,16 @@ trait Rules {
     override def name = field.name + "s double value"
   }
 
-  case class Regex(regex: String) extends Expr[String] {
-    def name = regex
-    def ===(that: Regex): Rule = new matchRegex(this, that)
-    def !==(that: Regex): Rule = new dontMatchRegex(this, that)
+  sealed abstract class RegexExpr extends Expr[String] {
+    def ===(that: RegexExpr): Rule = new matchRegex(this, that)
+    def !==(that: RegexExpr): Rule = new dontMatchRegex(this, that)
   }
+  case class Regex(regex: String) extends RegexExpr {
+    def name = ThisField.name + regex
+  }
+//  object Regex extends RegexExpr {
+//    
+//  }
 
   sealed abstract class Rule {
     def error: String
@@ -90,10 +95,10 @@ trait Rules {
   case class !==[T](e1: Expr[T], e2: Expr[T]) extends Rule {
     def error = e1.name + " must not be equal to " + e2.name
   }
-  case class matchRegex(r1: Regex, r2: Regex) extends Rule {
+  case class matchRegex(r1: RegexExpr, r2: RegexExpr) extends Rule {
     def error = r1.name + " must match " + r2.name
   }
-  case class dontMatchRegex(r1: Regex, r2: Regex) extends Rule {
+  case class dontMatchRegex(r1: RegexExpr, r2: RegexExpr) extends Rule {
     def error = r1.name + " must not match " + r2.name
   }
 }
