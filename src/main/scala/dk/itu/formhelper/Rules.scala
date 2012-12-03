@@ -5,6 +5,16 @@ import dk.itu.formhelper.FormHelper._
 import scala.util.matching.Regex
 
 trait Rules {
+  sealed abstract class FieldRef {
+    def name: String
+  }
+  case object ThisField extends FieldRef {
+    def name = "this field"
+  }
+  case class FieldId(id: String) extends FieldRef {
+    def name = "field " + id // TODO place this in a context where form is in scope so that the name can be accessed
+  }
+  
   sealed abstract class Expr[+T] {
     def name: String
   }

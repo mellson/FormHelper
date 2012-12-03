@@ -2,7 +2,7 @@ package dk.itu.formhelper.builders
 
 import dk.itu.formhelper.FormHelper._
 
-trait HtmlBuilder {
+object HtmlBuilder {
   private val indent = "  "
   def formHtml(form: Form, validate: Boolean): String = {
     // Check if style1 contains style2 
@@ -34,7 +34,7 @@ trait HtmlBuilder {
     // Adds validation method to a Field
     def validationHelper(field: Field, validate: Boolean): String = field match {
       case Submit(_, _, _, _) => ""
-      case _ => if (validate) " onblur=\"validate" + field.name + "()\"" else ""
+      case _ => if (validate) " id=\"" + field.id + "\" onblur=\"validate" + field.name + "('" + field.name + "')\"" else ""
     }
 
     // Value string helper
@@ -66,17 +66,5 @@ trait HtmlBuilder {
     }
 
     styleHelper(styleList(field.style).sorted, "")
-  }
-
-  // Converts a style to a list of styles
-  def styleList(style: Style): List[Style] = style match {
-    case AndStyle(s1, s2) => styleList(s1) ++ styleList(s2)
-    case s => List(s)
-  }
-  
-  // Converts a rule to a list of rules
-  def ruleList(rule: Rule): List[Rule] = rule match {
-    case AndRule(r1, r2) => ruleList(r1) ++ ruleList(r2)
-    case r => List(r)
   }
 }

@@ -3,10 +3,11 @@ package dk.itu.formhelper
 import dk.itu.formhelper.Validator._
 import dk.itu.formhelper.builders._
 
-object FormHelper extends Styles with Rules with HtmlBuilder {
+object FormHelper extends Styles with Rules {
   final case class Form(name: String, method: Method, action: String, fields: Field*) {
-    val html: String = formHtml(this, false)
-    val htmlWithValidation: String = formHtml(this, true)
+    val html: String = HtmlBuilder.formHtml(this, false)
+    val htmlWithValidation: String = HtmlBuilder.formHtml(this, true) + validationScript
+    def validationScript: String = JavaScriptBuilder.testValidation
     
     def validatedForm(postData: Option[Map[String, Seq[String]]]) : (Boolean, Form)= {
       val postForm = ScalaBuilder.formFromPost(this, postData)
@@ -27,8 +28,8 @@ object FormHelper extends Styles with Rules with HtmlBuilder {
     def setValue(s: String): Field
     def withStyle(s: Style): Field
     def withRule(r: Rule): Field
-    val html: String = fieldHtml(this, false)
-    val htmlWithValidation: String = fieldHtml(this, true)
+    val html: String = HtmlBuilder.fieldHtml(this, false)
+    val htmlWithValidation: String = HtmlBuilder.fieldHtml(this, true)
     val rule: Rule
     val style: Style
   }
@@ -75,15 +76,17 @@ object FormHelper extends Styles with Rules with HtmlBuilder {
     def setValue(v: String): Radio = Radio(name, value, rule, addStyle(Checked, style))
     def setChecked(b: Boolean) = if (b) Radio(name, value, rule, addStyle(Checked, style)) else Radio(name, value, rule, style)
   }
-
-  sealed abstract class FieldRef {
-    def name: String
+  
+  // Converts a style to a list of styles
+  def styleList(style: Style): List[Style] = style match {
+    case AndStyle(s1, s2) => styleList(s1) ++ styleList(s2)
+    case s => List(s)
   }
-  case object ThisField extends FieldRef {
-    def name = "this field"
-  }
-  case class FieldId(id: String) extends FieldRef {
-    def name = "field " + id // TODO place this in a context where form is in scope so that the name can be accessed
+  
+  // Converts a rule to a list of rules
+  def ruleList(rule: Rule): List[Rule] = rule match {
+    case AndRule(r1, r2) => ruleList(r1) ++ ruleList(r2)
+    case r => List(r)
   }
 }
 

@@ -101,7 +101,7 @@ object Validator {
 
         case ErrorRule(rule, err)                    => if (fieldEval(rule, field, form) == None) None else Some(err)
 
-        case _                                       => Some("unknown error in Validator.Scala")
+        case x                                       => Some("unknown error in Validator.Scala" + x)
       }
     }
   }
