@@ -1,5 +1,6 @@
 package dk.itu.formhelper
-import dk.itu.formhelper.FormHelper._ 
+
+import dk.itu.formhelper.FormHelper._
 
 object TestRunner extends App {
   def testForm = Form(
@@ -8,7 +9,7 @@ object TestRunner extends App {
     action = "/test",
     Text("Email") withStyle Label <> "Anders",
     Submit("Send information")
-    )
-      
+  )
+
   println(testForm.html)
 }

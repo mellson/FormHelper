@@ -29,7 +29,7 @@ object JavaScriptBuilder {
     case ErrorRule(r, error)   => ""
     case AndRule(r1, r2)       => ""
     case MatchRegex(regex)     => ""
-    case DontMatchRegex(regex) => ""
+    case DoNotMatchRegex(regex) => ""
     case <(e1, e2)             => ""
     case <=(e1, e2)            => ""
     case >(e1, e2)             => ""

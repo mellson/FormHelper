@@ -1,76 +1,104 @@
 package dk.itu.formhelper
 
 //import scala.language.implicitConversions
-import dk.itu.formhelper.FormHelper._
-import scala.util.matching.Regex
+
 
 trait Rules {
+
   sealed abstract class FieldRef {
     def name: String
   }
+
   case object ThisField extends FieldRef {
     def name = "this field"
   }
+
   case class FieldId(id: String) extends FieldRef {
-    def name = "field " + id // TODO place this in a context where form is in scope so that the name can be accessed
+    def name = "field " + id
   }
-  
+
   sealed abstract class Expr[+T] {
     def name: String
   }
 
   sealed abstract class ComparableExpr[T] extends Expr[T] {
     def <(that: Expr[T]): Rule = new <(this, that)
+
     def <=(that: Expr[T]): Rule = new <=(this, that)
+
     def >(that: Expr[T]): Rule = new >(this, that)
+
     def >=(that: Expr[T]): Rule = new >=(this, that)
+
     def ===(that: Expr[T]): Rule = new ===(this, that)
+
     def !==(that: Expr[T]): Rule = new !==(this, that)
   }
 
   implicit def liftIntToConst(n: Int): Const[Int] = Const(n)
+
   implicit def liftDoubleToConst(n: Double): Const[Double] = Const(n)
+
   implicit def liftStringToConst(s: String): Const[String] = Const(s)
+
   case class Const[T](value: T) extends ComparableExpr[T] {
     def name = value.toString
   }
 
   implicit def liftStringToLength(id: FieldRef): Length = Length(id)
+
   case class Length(field: FieldRef) extends ComparableExpr[Int] {
     def name = field.name + "s length"
   }
+
   object Length extends Length(ThisField)
 
   implicit def liftStringToValueRef(id: FieldRef): Value[String] = Value[String](id)
+
   case class Value[T](field: FieldRef) extends ComparableExpr[T] {
     def name = field.name + "s value"
   }
+
   object Value extends Value[String](ThisField)
+
   object StringValue extends Value[String](ThisField)
+
   object IntValue extends Value[Int](ThisField) {
     override def name = field.name + "s integer value"
   }
+
   object DoubleValue extends Value[Double](ThisField) {
     override def name = field.name + "s double value"
   }
 
   sealed abstract class Rule {
     def error: String
+
     def withError(err: => String) = ErrorRule(this, err)
+
     def &&(rule: Rule) = AndRule(this, rule)
+
     def andThen(rule: => Rule) = &&(rule)
   }
 
+  case class EmptyRule(error: String) extends Rule
+
+  object EmptyRule extends EmptyRule(error = " No Requirements ")
+
   case class OK(error: String) extends Rule
+
   object OK extends OK(error = " OK ")
 
   case class FAIL(error: String) extends Rule
+
   object FAIL extends FAIL(error = " FAIL ")
 
   case class Required(error: String) extends Rule
+
   object Required extends Required(error = " required ")
 
   case class ErrorRule(r: Rule, error: String) extends Rule
+
   case class AndRule(r1: Rule, r2: Rule) extends Rule {
     def error: String = r1.error + " and " + r2.error
   }
@@ -78,14 +106,17 @@ trait Rules {
   final case class MatchRegex(regex: String) extends Rule {
     def error = " must match " + regex
   }
-  final case class DontMatchRegex(regex: String) extends Rule {
+
+  final case class DoNotMatchRegex(regex: String) extends Rule {
     def error = " must not match " + regex
   }
+
   object Regex {
     def ===(regex: String) = MatchRegex(regex)
-    def !==(regex: String) = DontMatchRegex(regex)
+
+    def !==(regex: String) = DoNotMatchRegex(regex)
   }
-  
+
   // Various strings to help build regular expressions
   val Email = """^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$"""
   val IP = """^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"""
@@ -93,23 +124,29 @@ trait Rules {
   val Float = """^-?(?:\d+|\d*\.\d+)$"""
   val Alpha = """^\D+$"""
 
-  // OPerator'S
+  // Operators
   case class <[T](e1: Expr[T], e2: Expr[T]) extends Rule {
     def error = e1.name + " must be under " + e2.name
   }
+
   case class <=[T](e1: Expr[T], e2: Expr[T]) extends Rule {
     def error = e1.name + " must be under or equal to " + e2.name
   }
+
   case class >[T](e1: Expr[T], e2: Expr[T]) extends Rule {
     def error = e1.name + " must be over " + e2.name
   }
+
   case class >=[T](e1: Expr[T], e2: Expr[T]) extends Rule {
     def error = e1.name + " must be over or equal to " + e2.name
   }
+
   case class ===[T](e1: Expr[T], e2: Expr[T]) extends Rule {
     def error = e1.name + " must be equal to " + e2.name
   }
+
   case class !==[T](e1: Expr[T], e2: Expr[T]) extends Rule {
     def error = e1.name + " must not be equal to " + e2.name
   }
+
 }

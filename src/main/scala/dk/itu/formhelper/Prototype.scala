@@ -4,22 +4,22 @@ package dk.itu.formhelper
 
 object Prototype {
   // BUILDER
-  
+
 
   // VALIDATOR
 
   // FORM
-  
+
 
   // FIELD
-  
+
 
   // STYLE
-  
+
 
   // EXPR
-  
+
 
   /// RULE
-  
+
 }

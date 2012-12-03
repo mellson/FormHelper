@@ -7,7 +7,7 @@ object ScalaBuilder {
   def validateForm(form: Form): Boolean = {
     val errOptions = (for {
       field <- form.fields
-    } yield fieldEval(field.rule, field, form)).toList
+    } yield fieldEvaluator(field.rule.getOrElse(EmptyRule), field, form)).toList
 
     def errorsIn(errs: List[Option[String]]): Boolean = errs match {
       case Nil             => false
@@ -21,9 +21,9 @@ object ScalaBuilder {
   def formFromPost(form: Form, postData: Option[Map[String, Seq[String]]]): Form = {
     // Checks if the data value should be added. Need this check because Radio fields are a bit weird.
     def dataHelper(field: Field, data: String, name: String): Field = field match {
-      case Radio(groupname, value, _, _) =>
+      case Radio(groupName, value, _, _) =>
         // Add checked to the radio that is checked
-        if (groupname == name && data == value) field setValue data
+        if (groupName == name && data == value) field setValue data
         else field
       case _                             => field setValue data
     }
@@ -33,8 +33,8 @@ object ScalaBuilder {
      */
     def addGroupRequired(field: Field): Field = field match {
       case Radio(_, _, _, _) =>
-        val groupContainsRequired = !form.fields.filter(f => f.name == field.name).filter(f => ruleList(f.rule).contains(Required)).isEmpty
-        val selfContainsRequired = ruleList(field.rule).contains(Required)
+        val groupContainsRequired = !form.fields.filter(f => f.name == field.name).filter(f => ruleList(f.rule.getOrElse(EmptyRule)).contains(Required)).isEmpty
+        val selfContainsRequired = ruleList(field.rule.getOrElse(EmptyRule)).contains(Required)
         if (groupContainsRequired)
           if (selfContainsRequired) field
           else field withRule Required
@@ -56,20 +56,20 @@ object ScalaBuilder {
     if (!dataFields.isEmpty) {
       val newFields = for {
         field <- form.fields
-        newfields = if (!dataFields.filter(f => f.id == field.id).isEmpty) dataFields.filter(f => f.id == field.id) else List(field)
-        newfield <- newfields
-      } yield newfield
+        newFields = if (!dataFields.filter(f => f.id == field.id).isEmpty) dataFields.filter(f => f.id == field.id) else List(field)
+        newField <- newFields
+      } yield newField
 
       // Temp form with the data from the post
       val tempForm = Form(form.name, form.method, form.action, newFields: _*)
 
-      // Check if the new form with data fullfills all requirements, if not add error style
+      // Check if the new form with data fulfills all requirements, if not add error style
       val errorFields = for {
         field <- form.fields.map(f => addGroupRequired(f))
-        newfields = if (!dataFields.filter(f => f.id == field.id).isEmpty) dataFields.filter(f => f.id == field.id) else List(field)
-        newfield <- newfields
-        error = fieldEval(newfield.rule, newfield, tempForm)
-        f = if (error == None) newfield else newfield withStyle Error === error.get
+        newFields = if (!dataFields.filter(f => f.id == field.id).isEmpty) dataFields.filter(f => f.id == field.id) else List(field)
+        newField <- newFields
+        error = fieldEvaluator(newField.rule.getOrElse(EmptyRule), newField, tempForm)
+        f = if (error == None) newField else newField withStyle Error === error.get
       } yield f
 
       Form(form.name, form.method, form.action, errorFields: _*)
