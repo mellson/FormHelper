@@ -2,13 +2,13 @@ package dk.itu.formhelper
 import dk.itu.formhelper.FormHelper._ 
 
 object TestRunner extends App {
-  val form = Form(
-    name = "Else Form",
+  def testForm = Form(
+    name = "Form",
     method = Post,
-    action = "routes.Application.submit().toString",
-    Text("Email") withStyle Label <> "Email",
+    action = "/test",
+    Text("Email") withStyle Label <> "Anders",
     Submit("Send information")
     )
       
-  println(form.htmlWithValidation)
+  println(testForm.html)
 }
