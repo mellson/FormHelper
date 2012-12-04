@@ -35,7 +35,7 @@ object HtmlBuilder {
     // Adds validation method to a Field
     def validationHelper(field: Field, validate: Boolean): String = field match {
       case Submit(_, _, _, _) => ""
-      case _                  => if (validate) " id=\"" + field.id + "\" onblur=\"validate" + field.name + "('" + field.name + "')\"" else ""
+      case _                  => if (validate) " id=\"" + field.id + "\" onblur=\"validate" + field.name + "('" + field.name + "')\" validField=\"\"" else ""
     }
 
     // Value string helper

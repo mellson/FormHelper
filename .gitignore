@@ -25,3 +25,5 @@ target/
 .settings/
 .worksheet/
 *.sc
+
+src/main/js/test.js
