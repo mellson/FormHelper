@@ -1,9 +1,9 @@
 package dk.itu.formhelper.builders
 
 import dk.itu.formhelper.FormHelper._
-import dk.itu.formhelper.Validator._
 
 object ScalaBuilder {
+  // Validates a form. Returns true if the form validated ok and false if not.
   def validateForm(form: Form): Boolean = {
     val errOptions = (for {
       field <- form.fields
@@ -18,6 +18,7 @@ object ScalaBuilder {
     !errorsIn(errOptions)
   }
 
+  // Converts HTTP Post data to a FormHelper.Form
   def formFromPost(form: Form, postData: Option[Map[String, Seq[String]]]): Form = {
     // Checks if the data value should be added. Need this check because Radio fields are a bit weird.
     def dataHelper(field: Field, data: String, name: String): Field = field match {
@@ -74,5 +75,113 @@ object ScalaBuilder {
 
       Form(form.name, form.method, form.action, errorFields: _*)
     } else form
+  }
+
+  // Evaluates a field and return an Option[Error String]. It returns None if the field validated.
+  def fieldEvaluator(rule: Rule, field: Field, form: Form): Option[String] = field match {
+    case Radio(_, _, _, _)  =>
+      if (ruleList(rule).contains(Required)) {
+        val anyRadioFromGroupChecked = !form.fields.filter(f => f.name == field.name).filter(f => styleList(f.style.getOrElse(EmptyStyle)).contains(Checked)).isEmpty
+        if (anyRadioFromGroupChecked) None
+        else Some(rule.error)
+      } else None
+    case Submit(_, _, _, _) => None
+    case _                  => {
+      sealed abstract class Operation
+      case object Below extends Operation
+      case object BelowOrEqual extends Operation
+      case object Above extends Operation
+      case object AboveOrEqual extends Operation
+      case object Equal extends Operation
+
+      // Compares the values based on the operation
+      def opHelper[T](val1: T, val2: T, op: Operation) = (val1, val2) match {
+        case (v1: Int, v2: Int)       => op match {
+          case Below        => v1 < v2
+          case BelowOrEqual => v1 <= v2
+          case Above        => v1 > v2
+          case AboveOrEqual => v1 >= v2
+          case Equal        => v1 == v2
+        }
+        case (v1: Double, v2: Double) => op match {
+          case Below        => v1 < v2
+          case BelowOrEqual => v1 <= v2
+          case Above        => v1 > v2
+          case AboveOrEqual => v1 >= v2
+          case Equal        => v1 == v2
+        }
+        case (v1: String, v2: String) => op match {
+          case Below        => v1 < v2
+          case BelowOrEqual => v1 <= v2
+          case Above        => v1 > v2
+          case AboveOrEqual => v1 >= v2
+          case Equal        => v1 == v2
+        }
+      }
+
+      // Gets the value from the FieldRef and evaluates it with operation given
+      def refHelper[T](fieldRef: FieldRef, fieldValue: T, op: Operation, stringToValue: String => T) = fieldRef match {
+        case ThisField      => false
+        case FieldId(refId) =>
+          val booleanList = for {
+            otherField <- form.fields.filter(f => f.id == refId)
+            otherValue = stringToValue(otherField.value)
+          } yield opHelper(fieldValue, otherValue, op)
+          !booleanList.contains(false)
+      }
+      rule match {
+        case <(Length(ThisField), Const(n: Int))   => if (field.value.length < n) None else Some(rule.error)
+        case <=(Length(ThisField), Const(n: Int))  => if (field.value.length <= n) None else Some(rule.error)
+        case >(Length(ThisField), Const(n: Int))   => if (field.value.length > n) None else Some(rule.error)
+        case >=(Length(ThisField), Const(n: Int))  => if (field.value.length >= n) None else Some(rule.error)
+        case ===(Length(ThisField), Const(n: Int)) => if (field.value.length == n) None else Some(rule.error)
+
+        case <(Length(ThisField), Length(ref))   => if (refHelper(ref, field.value.length, Below, (s: String) => s.length)) None else Some(rule.error)
+        case <=(Length(ThisField), Length(ref))  => if (refHelper(ref, field.value.length, BelowOrEqual, (s: String) => s.length)) None else Some(rule.error)
+        case >(Length(ThisField), Length(ref))   => if (refHelper(ref, field.value.length, Above, (s: String) => s.length)) None else Some(rule.error)
+        case >=(Length(ThisField), Length(ref))  => if (refHelper(ref, field.value.length, AboveOrEqual, (s: String) => s.length)) None else Some(rule.error)
+        case ===(Length(ThisField), Length(ref)) => if (refHelper(ref, field.value.length, Equal, (s: String) => s.length)) None else Some(rule.error)
+
+        case <(Value(ThisField), Const(n: Int))   => if (field.value.toInt < n) None else Some(rule.error)
+        case <=(Value(ThisField), Const(n: Int))  => if (field.value.toInt <= n) None else Some(rule.error)
+        case >(Value(ThisField), Const(n: Int))   => if (field.value.toInt > n) None else Some(rule.error)
+        case >=(Value(ThisField), Const(n: Int))  => if (field.value.toInt >= n) None else Some(rule.error)
+        case ===(Value(ThisField), Const(n: Int)) => if (field.value.toInt == n) None else Some(rule.error)
+
+        case <(Value(ThisField), Const(n: Double))   => if (field.value.toDouble < n) None else Some(rule.error)
+        case <=(Value(ThisField), Const(n: Double))  => if (field.value.toDouble <= n) None else Some(rule.error)
+        case >(Value(ThisField), Const(n: Double))   => if (field.value.toDouble > n) None else Some(rule.error)
+        case >=(Value(ThisField), Const(n: Double))  => if (field.value.toDouble >= n) None else Some(rule.error)
+        case ===(Value(ThisField), Const(n: Double)) => if (field.value.toDouble == n) None else Some(rule.error)
+
+        case <(Value(ThisField), Const(n: String))   => if (field.value < n) None else Some(rule.error)
+        case <=(Value(ThisField), Const(n: String))  => if (field.value <= n) None else Some(rule.error)
+        case >(Value(ThisField), Const(n: String))   => if (field.value > n) None else Some(rule.error)
+        case >=(Value(ThisField), Const(n: String))  => if (field.value >= n) None else Some(rule.error)
+        case ===(Value(ThisField), Const(n: String)) => if (field.value == n) None else Some(rule.error)
+
+        case <(Value(ThisField), Value(ref))   => if (refHelper(ref, field.value, Below, (s: String) => s)) None else Some(rule.error)
+        case <=(Value(ThisField), Value(ref))  => if (refHelper(ref, field.value, BelowOrEqual, (s: String) => s)) None else Some(rule.error)
+        case >(Value(ThisField), Value(ref))   => if (refHelper(ref, field.value, Above, (s: String) => s)) None else Some(rule.error)
+        case >=(Value(ThisField), Value(ref))  => if (refHelper(ref, field.value, AboveOrEqual, (s: String) => s)) None else Some(rule.error)
+        case ===(Value(ThisField), Value(ref)) => if (refHelper(ref, field.value, Equal, (s: String) => s)) None else Some(rule.error)
+
+        case MatchRegex(regex)      => if (field.value.matches(regex)) None else Some(rule.error)
+        case DoNotMatchRegex(regex) => if (!field.value.matches(regex)) None else Some(rule.error)
+
+        case OK(err)       => None
+        case FAIL(err)     => Some(err)
+        case Required(err) => if (!field.value.isEmpty) None else Some(err)
+
+        case AndRule(r1, r2) => if (fieldEvaluator(r1, field, form) == None) if (fieldEvaluator(r2, field, form) == None) None else Some(r2.error) else Some(r1.error)
+
+        case ErrorRule(rule1, err) => if (fieldEvaluator(rule1, field, form) == None) None else Some(err)
+
+        // If the rule is Empty, it is because there were no requirements
+        case EmptyRule(err) => None
+
+        case x => Some("unknown error in Validator.Scala" + x)
+      }
+    }
   }
 }

@@ -3,12 +3,41 @@ package dk.itu.formhelper.builders
 import dk.itu.formhelper.FormHelper._
 
 object JavaScriptBuilder {
-  private def scriptTag(s: String) = {
-    "\n" +
-      "<script>" + "\n" +
-      s + "\n" +
-      "</script>"
+  private def ruleToFunctionStrings(rule: Rule, form: Form): List[String] = rule match {
+    case AndRule(r1, r2)        => ruleToFunctionStrings(r1, form) ++ ruleToFunctionStrings(r2, form)
+    case OK(error)              => List(okValidation)
+    case FAIL(error)            => List(failValidation)
+    case Required(error)        => List(error)
+    case ErrorRule(r, error)    => List(error)
+    case MatchRegex(regex)      => List(regex)
+    case DoNotMatchRegex(regex) => List(regex)
+    case <(e1, e2)              => List("error")
+    case <=(e1, e2)             => List("error")
+    case >(e1, e2)              => List("error")
+    case >=(e1, e2)             => List("error")
+    case ===(e1, e2)            => List("error")
+    case !==(e1, e2)            => List("error")
   }
+
+  // Extract the function name of a function
+  private def functionNameExtractor(js: String) = js.substring(js.indexOf("function") + 8, js.indexOf(")") + 1).trim
+
+  // Returns JavaScript for validating a form
+  def validationScriptForForm(form: Form): String = {
+    def fieldsHelper(fields: List[Field]): List[String] = fields match {
+      case Nil         => Nil
+      case field :: xs => field.rule match {
+        case Some(rule) =>
+          val validationFunctions = ruleToFunctionStrings(rule, form)
+          val functionNames = validationFunctions.map(function => functionNameExtractor(function))
+          validationFunctions.mkString("") + fieldValidation(functionNames, field.id).mkString("") :: fieldsHelper(xs)
+        case None       => fieldsHelper(xs)
+      }
+    }
+    "<script>" + fieldsHelper(form.fields.toList).mkString("") + formValidationScript + "</script>"
+  }
+
+  /* Validation scripts as strings below here */
 
   private val formValidationScript: String =
     """
@@ -30,7 +59,7 @@ object JavaScriptBuilder {
       |    }
       |    return true;
       |}
-    """.stripMargin
+      | """.stripMargin
 
   private def functionValidationHelper(functionName: String): String =
     """
@@ -53,66 +82,17 @@ object JavaScriptBuilder {
                                                                                       |}
                                                                                     """.stripMargin
 
-  private def emailValidation: String =
-    """
-      |function validateEmail(name) {
-      |    var x = document.getElementById(name);
-      |    var re = /^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$/;
-      |    if (re.test(x.value))
-      |        x.setAttribute("validField", "valid");
-      |    else
-      |        x.setAttribute("validField", "notValid");
-      |}
-    """.stripMargin + formValidationScript
-
-
-  def testValidation: String = {
-    scriptTag(emailValidation)
-  }
-
-  def okValidation: String =
+  private def okValidation: String =
     """
       |function validateOk() {
       |    return true;
       |}
     """.stripMargin
 
-  def failValidation: String =
+  private def failValidation: String =
     """
       |function validateFail() {
       |    return false;
       |}
     """.stripMargin
-
-  private def ruleToFunctionStrings(rule: Rule, form: Form): List[String] = rule match {
-    case AndRule(r1, r2)        => ruleToFunctionStrings(r1, form) ++ ruleToFunctionStrings(r2, form)
-    case OK(error)              => List(okValidation)
-    case FAIL(error)            => List(failValidation)
-    case Required(error)        => List(error)
-    case ErrorRule(r, error)    => List(error)
-    case MatchRegex(regex)      => List(regex)
-    case DoNotMatchRegex(regex) => List(regex)
-    case <(e1, e2)              => List("error")
-    case <=(e1, e2)             => List("error")
-    case >(e1, e2)              => List("error")
-    case >=(e1, e2)             => List("error")
-    case ===(e1, e2)            => List("error")
-    case !==(e1, e2)            => List("error")
-  }
-
-  def getJSFunctionName(js: String) = js.substring(js.indexOf("function") + 8, js.indexOf(")") + 1).trim
-
-  def validationScriptForForm(form: Form): String = {
-    def fieldsHelper(fields: List[Field]): List[String] = fields match {
-      case Nil         => Nil
-      case field :: xs => field.rule match {
-        case Some(rule) =>
-          val validationFunctions = ruleToFunctionStrings(rule, form)
-          val functionNames = validationFunctions.map(f => getJSFunctionName(f))
-          validationFunctions.mkString("") + fieldValidation(functionNames, field.id).mkString("") :: fieldsHelper(xs)
-        case None       => fieldsHelper(xs)
-      }
-    }
-    scriptTag(fieldsHelper(form.fields.toList).mkString("") + formValidationScript)
-  }
 }
