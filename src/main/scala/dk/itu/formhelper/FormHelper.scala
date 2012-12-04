@@ -6,9 +6,7 @@ object FormHelper extends Styles with Rules {
 
   final case class Form(name: String, method: Method, action: String, fields: Field*) {
     val html: String = HtmlBuilder.formHtml(this, validate = false)
-    val htmlWithValidation: String = HtmlBuilder.formHtml(this, validate = true) + validationScript
-
-    def validationScript: String = JavaScriptBuilder.testValidation
+    val htmlWithValidation: String = HtmlBuilder.formHtml(this, validate = true) + JavaScriptBuilder.validationScriptForForm(this)
 
     def validatedForm(postData: Option[Map[String, Seq[String]]]): (Boolean, Form) = {
       val postForm = ScalaBuilder.formFromPost(this, postData)

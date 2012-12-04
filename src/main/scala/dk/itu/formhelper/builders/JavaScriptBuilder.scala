@@ -32,6 +32,26 @@ object JavaScriptBuilder {
       |}
     """.stripMargin
 
+  private def functionValidationHelper(functionName: String): String =
+    """
+      if (!""" +
+      functionName +
+      """) {
+      |        x.setAttribute("validField", "notValid");
+      |        return false;
+      |    }
+    """.stripMargin
+
+  private def fieldValidation(functionNames: Seq[String], fieldId: String): String =
+    """
+      |function validateField() {
+      |var x = document.getElementById("""".stripMargin +  + """");""" +
+      (for{fn <- functionNames} yield functionValidationHelper(fn)).mkString("") + """
+      |    x.setAttribute("validField", "valid");
+      |    return true;
+      |}
+    """.stripMargin
+
   private def emailValidation: String =
     """
       |function validateEmail(name) {
@@ -49,10 +69,24 @@ object JavaScriptBuilder {
     scriptTag(emailValidation)
   }
 
+  def okValidation: String =
+    """
+      |function validateOk() {
+      |    return true;
+      |}
+    """.stripMargin
+
+  def failValidation: String =
+    """
+      |function validateFail() {
+      |    return false;
+      |}
+    """.stripMargin
+
   private def ruleToFunctionStrings(rule: Rule, form: Form): List[String] = rule match {
     case AndRule(r1, r2)        => ruleToFunctionStrings(r1, form) ++ ruleToFunctionStrings(r2, form)
-    case OK(error)              => List(error)
-    case FAIL(error)            => List(error)
+    case OK(error)              => List(okValidation)
+    case FAIL(error)            => List(failValidation)
     case Required(error)        => List(error)
     case ErrorRule(r, error)    => List(error)
     case MatchRegex(regex)      => List(regex)
@@ -65,6 +99,8 @@ object JavaScriptBuilder {
     case !==(e1, e2)            => List("error")
   }
 
+  def getJSFunctionName(js: String) = js.substring(js.indexOf("function")+8, js.indexOf(")")+1).trim
+
   def validationScriptForForm(form: Form): String = {
     val rules: Seq[Rule] = for {
       field <- form.fields
@@ -75,15 +111,10 @@ object JavaScriptBuilder {
       rule <- rules
       functionString <- ruleToFunctionStrings(rule, form)
     } yield functionString
-    scriptTag(validationFunctions.mkString("\n\n"))
-  }
 
-  //  def validationScriptForField(field: Field): String = {
-  //    val functionStrings = for {
-  //      rule1 <- field.rule
-  //      rule2 <- ruleList(rule1)
-  //    } yield ruleToFunctionStrings(rule2, field)
-  //    scriptTag(functionStrings.mkString("\n"))
-  //  }
+    val functionNames = validationFunctions.map(f=>getJSFunctionName(f))
+
+    scriptTag(fieldValidation(functionNames) + validationFunctions.mkString("\n\n")) //+ formValidationScript)
+  }
 
 }

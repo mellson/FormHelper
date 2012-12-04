@@ -8,8 +8,7 @@ object TestRunner extends App {
     name = "Form",
     method = Post,
     action = "/test",
-    Text("Email") withStyle Label <> "Anders",
-    Text("Email2") withStyle Label <> "Anders",
+    Text("Email") withStyle Label <> "Anders" withRule OK && FAIL,
     Submit("Send information")
   )
 
