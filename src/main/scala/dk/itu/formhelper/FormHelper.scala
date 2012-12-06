@@ -5,8 +5,8 @@ import dk.itu.formhelper.builders._
 object FormHelper extends Styles with Rules {
 
   final case class Form(name: String, method: Method, action: String, fields: Field*) {
-    val html: String = HtmlBuilder.formHtml(this, validate = false)
-    val htmlWithValidation: String = HtmlBuilder.formHtml(this, validate = true) + JavaScriptBuilder.validationScriptForForm(this)
+    lazy val html: String = HtmlBuilder.formHtml(this, validate = false)
+    lazy val htmlWithValidation: String = HtmlBuilder.formHtml(this, validate = true) + JavaScriptBuilder.validationScriptForForm(this)
 
     def validatedForm(postData: Option[Map[String, Seq[String]]]): (Boolean, Form) = {
       val postForm = ScalaBuilder.formFromPost(this, postData)
@@ -36,8 +36,8 @@ object FormHelper extends Styles with Rules {
 
     def withRule(r: Rule): Field
 
-    val html: String = HtmlBuilder.fieldHtml(this, validate = false)
-    val htmlWithValidation: String = HtmlBuilder.fieldHtml(this, validate = true)
+    lazy val html: String = HtmlBuilder.fieldHtml(this, validate = false)
+    lazy val htmlWithValidation: String = HtmlBuilder.fieldHtml(this, validate = true)
     val rule: Option[Rule]
     val style: Option[Style]
   }
