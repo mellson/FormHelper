@@ -78,6 +78,7 @@ trait Rules {
 
     def &&(rule: Rule) = AndRule(this, rule)
 
+    // TODO use this to toggle extra fields?
     def andThen(rule: => Rule) = &&(rule)
   }
 
