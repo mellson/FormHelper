@@ -7,7 +7,7 @@ object TestRunner extends App {
     name = "Super Cool Form",
     method = Post,
     action = "/test",
-    Text("Email") withStyle Label <> "Email" withRule Value === FieldId("Test"),
+    Text("Email") withStyle Label <> "Email" withRule OK && OK && (OK withError "hurra"),
     Text("Test") withStyle Label <> "Test",
     Submit("Send information")
   )
