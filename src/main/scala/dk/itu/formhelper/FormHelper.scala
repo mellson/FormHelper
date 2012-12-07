@@ -106,15 +106,15 @@ object FormHelper extends Styles with Rules {
   // Converts a style to a list of styles
   def styleList(style: Style): List[Style] = style match {
     case AndStyle(s1, s2) => styleList(s1) ++ styleList(s2)
-    case EmptyStyle => Nil
-    case s => List(s)
+    case EmptyStyle       => Nil
+    case s                => List(s)
   }
 
   // Converts a rule to a list of rules
   def ruleList(rule: Rule): List[Rule] = rule match {
     case AndRule(r1, r2) => ruleList(r1) ++ ruleList(r2)
-    case EmptyRule => Nil
-    case r => List(r)
+    case EmptyRule       => Nil
+    case r               => List(r)
   }
 }
 
