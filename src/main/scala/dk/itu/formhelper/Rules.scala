@@ -96,7 +96,8 @@ trait Rules {
 
   case class Required(error: String) extends Rule
 
-  object Required extends Required(error = " required ")
+
+  object Required extends Required(error = "this is required")
 
   case class ErrorRule(r: Rule, error: String) extends Rule
 

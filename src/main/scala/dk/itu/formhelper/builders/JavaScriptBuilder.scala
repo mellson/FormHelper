@@ -10,7 +10,7 @@ object JavaScriptBuilder {
         case Submit(_, _, _, _) => None
         case Radio(_, _, _, _)  =>
           if (ruleList(rule1).contains(Required)) {
-            Some(radioRequiredValidation(field.name, field.id + id, if (customErr.isEmpty) rule.error else customErr), field.id + id)
+            Some(radioRequiredValidation(field.id, field.name, field.id + id, if (customErr.isEmpty) rule.error else customErr), field.id + id)
           } else None
         case _                  =>
           rule match {
@@ -93,12 +93,12 @@ object JavaScriptBuilder {
   private def formValidationScript(form: Form): String =
     """
       |function validateForm() {
-      | """.stripMargin + // Validate each field when a user tries to submit the form
-      (for {field <- form.fields.filter(f => filterSubmit(f)).filter(f=>f.rule!=None)} yield "   validate%s();".format(field.id)).mkString("\n") +
+      |""".stripMargin + // Validate each field when a user tries to submit the form
+      (for {field <- form.fields} yield """    document.getElementById("%s").focus();""".format(field.id)).mkString("\n") +
       """
+        |    var ok = false;
         |    var formContainer = document.getElementById("%s");
         |    var inputElements = formContainer.getElementsByTagName("input");
-        |    console.log(inputElements);
         |    for (var i = 0; i < inputElements.length; i++) {
         |        var vf = inputElements[i].getAttribute("validField");
         |        if (vf == "notValid" || vf == "") {
@@ -112,8 +112,9 @@ object JavaScriptBuilder {
         |            }
         |            return false;
         |        }
+        |        ok = true;
         |    }
-        |    return true;
+        |    return ok;
         |}""".format(form.id).stripMargin
 
   private def functionValidationHelper(functionNameAndUniqueId: (String, String)): String =
@@ -227,7 +228,7 @@ object JavaScriptBuilder {
       |}""".format(uniqueId, fieldId).stripMargin + jsErrMsg(uniqueId, errMsg)
   }
 
-  def radioRequiredValidation(groupId: String, uniqueId: String, errMsg: String): String = {
+  def radioRequiredValidation(fieldId: String, groupId: String, uniqueId: String, errMsg: String): String = {
     """
       |function validateRadio%s() {
       |    var checked = false;
@@ -239,6 +240,6 @@ object JavaScriptBuilder {
       |        }
       |    }
       |    return checked;
-      |}""".format(uniqueId, groupId).stripMargin + jsErrMsg(uniqueId, errMsg)
+      |}""".format(fieldId, groupId).stripMargin + jsErrMsg(uniqueId, errMsg)
   }
 }

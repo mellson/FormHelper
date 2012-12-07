@@ -9,10 +9,11 @@ object TestRunner extends App {
     action = "/test",
     Radio("gruppe1","ja") withRule Required,
     Radio("gruppe1","nej"),
-    Text("hej"),
-    Submit("Send information")
+    Text("hej") withRule Required,
+    Text("Anders") withRule IntValue === 40,
+    Submit("Send Information")
   )
 
   println(testForm.htmlWithValidation)
-  //  println(JavaScriptBuilder.validationScriptForForm(testForm))
+
 }
