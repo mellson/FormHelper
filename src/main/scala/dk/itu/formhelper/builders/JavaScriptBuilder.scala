@@ -5,50 +5,65 @@ import dk.itu.formhelper.FormHelper._
 object JavaScriptBuilder {
   // Returns a tuple with the validation function and a unique id for each rule in a rule list
   def ruleToFunctions(rule1: Rule, field: Field, form: Form, customErr: String = ""): List[(String, String)] = {
-    def ruleHelper(rule: Rule, field: Field, form: Form, customErr: String = "", id: Int = 0): (String, String) = {
-      rule match {
-        case ErrorRule(r, error)                     => ruleHelper(r, field, form, error, id)
-        case OK(error)                               => (okValidation(field.id + id, if (customErr.isEmpty) error else customErr), field.id + id)
-        case FAIL(error)                             => (failValidation(field.id + id, if (customErr.isEmpty) error else customErr), field.id + id)
-        case Required(error)                         => (requiredValidation(field.id, field.id + id, if (customErr.isEmpty) error else customErr), field.id + id)
-        case MatchRegex(regex)                       => (regexValidation(field.id, field.id + id, regex, if (customErr.isEmpty) rule.error else customErr, shouldMatch = true), field.id + id)
-        case DoNotMatchRegex(regex)                  => (regexValidation(field.id, field.id + id, regex, if (customErr.isEmpty) rule.error else customErr, shouldMatch = false), field.id + id)
-        case <(Length(ThisField), Const(n: Int))     => (lengthValidation(field.id, field.id + id, n, "<", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case <=(Length(ThisField), Const(n: Int))    => (lengthValidation(field.id, field.id + id, n, "<=", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case >(Length(ThisField), Const(n: Int))     => (lengthValidation(field.id, field.id + id, n, ">", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case >=(Length(ThisField), Const(n: Int))    => (lengthValidation(field.id, field.id + id, n, ">=", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case ===(Length(ThisField), Const(n: Int))   => (lengthValidation(field.id, field.id + id, n, "==", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case <(Length(ThisField), Length(ref))       => (lengthRefValidation(field.id, field.id + id, ref, "<", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case <=(Length(ThisField), Length(ref))      => (lengthRefValidation(field.id, field.id + id, ref, "<=", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case >(Length(ThisField), Length(ref))       => (lengthRefValidation(field.id, field.id + id, ref, ">", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case >=(Length(ThisField), Length(ref))      => (lengthRefValidation(field.id, field.id + id, ref, ">=", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case ===(Length(ThisField), Length(ref))     => (lengthRefValidation(field.id, field.id + id, ref, "==", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case <(Value(ThisField), Const(n: Int))      => (intValueValidation(field.id, field.id + id, n, "<", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case <=(Value(ThisField), Const(n: Int))     => (intValueValidation(field.id, field.id + id, n, "<=", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case >(Value(ThisField), Const(n: Int))      => (intValueValidation(field.id, field.id + id, n, ">", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case >=(Value(ThisField), Const(n: Int))     => (intValueValidation(field.id, field.id + id, n, ">=", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case ===(Value(ThisField), Const(n: Int))    => (intValueValidation(field.id, field.id + id, n, "==", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case <(Value(ThisField), Const(n: Double))   => (doubleValueValidation(field.id, field.id + id, n, "<", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case <=(Value(ThisField), Const(n: Double))  => (doubleValueValidation(field.id, field.id + id, n, "<=", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case >(Value(ThisField), Const(n: Double))   => (doubleValueValidation(field.id, field.id + id, n, ">", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case >=(Value(ThisField), Const(n: Double))  => (doubleValueValidation(field.id, field.id + id, n, ">=", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case ===(Value(ThisField), Const(n: Double)) => (doubleValueValidation(field.id, field.id + id, n, "==", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case <(Value(ThisField), Const(n: String))   => (stringValueValidation(field.id, field.id + id, n, "<", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case <=(Value(ThisField), Const(n: String))  => (stringValueValidation(field.id, field.id + id, n, "<=", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case >(Value(ThisField), Const(n: String))   => (stringValueValidation(field.id, field.id + id, n, ">", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case >=(Value(ThisField), Const(n: String))  => (stringValueValidation(field.id, field.id + id, n, ">=", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case ===(Value(ThisField), Const(n: String)) => (stringValueValidation(field.id, field.id + id, n, "==", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case <(Value(ThisField), Value(ref))         => (valueRefValidation(field.id, field.id + id, ref, "<", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case <=(Value(ThisField), Value(ref))        => (valueRefValidation(field.id, field.id + id, ref, "<=", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case >(Value(ThisField), Value(ref))         => (valueRefValidation(field.id, field.id + id, ref, ">", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case >=(Value(ThisField), Value(ref))        => (valueRefValidation(field.id, field.id + id, ref, ">=", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case ===(Value(ThisField), Value(ref))       => (valueRefValidation(field.id, field.id + id, ref, "==", if (customErr.isEmpty) rule.error else customErr), field.id + id)
-        case _                                       => ("","")
+    def ruleHelper(rule: Rule, field: Field, form: Form, customErr: String = "", id: Int = 0): Option[(String, String)] = {
+      field match {
+        case Submit(_, _, _, _) => None
+        case Radio(_, _, _, _)  =>
+          if (ruleList(rule1).contains(Required)) {
+            Some(radioRequiredValidation(field.name, field.id + id, if (customErr.isEmpty) rule.error else customErr), field.id + id)
+          } else None
+        case _                  =>
+          rule match {
+            case ErrorRule(r, error)                     => ruleHelper(r, field, form, error, id)
+            case OK(error)                               => Some((okValidation(field.id + id, if (customErr.isEmpty) error else customErr), field.id + id))
+            case FAIL(error)                             => Some((failValidation(field.id + id, if (customErr.isEmpty) error else customErr), field.id + id))
+            case Required(error)                         => Some((requiredValidation(field.id, field.id + id, if (customErr.isEmpty) error else customErr), field.id + id))
+            case MatchRegex(regex)                       => Some((regexValidation(field.id, field.id + id, regex, if (customErr.isEmpty) rule.error else customErr, shouldMatch = true), field.id + id))
+            case DoNotMatchRegex(regex)                  => Some((regexValidation(field.id, field.id + id, regex, if (customErr.isEmpty) rule.error else customErr, shouldMatch = false), field.id + id))
+            case <(Length(ThisField), Const(n: Int))     => Some((lengthValidation(field.id, field.id + id, n, "<", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case <=(Length(ThisField), Const(n: Int))    => Some((lengthValidation(field.id, field.id + id, n, "<=", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case >(Length(ThisField), Const(n: Int))     => Some((lengthValidation(field.id, field.id + id, n, ">", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case >=(Length(ThisField), Const(n: Int))    => Some((lengthValidation(field.id, field.id + id, n, ">=", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case ===(Length(ThisField), Const(n: Int))   => Some((lengthValidation(field.id, field.id + id, n, "==", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case <(Length(ThisField), Length(ref))       => Some((lengthRefValidation(field.id, field.id + id, ref, "<", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case <=(Length(ThisField), Length(ref))      => Some((lengthRefValidation(field.id, field.id + id, ref, "<=", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case >(Length(ThisField), Length(ref))       => Some((lengthRefValidation(field.id, field.id + id, ref, ">", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case >=(Length(ThisField), Length(ref))      => Some((lengthRefValidation(field.id, field.id + id, ref, ">=", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case ===(Length(ThisField), Length(ref))     => Some((lengthRefValidation(field.id, field.id + id, ref, "==", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case <(Value(ThisField), Const(n: Int))      => Some((intValueValidation(field.id, field.id + id, n, "<", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case <=(Value(ThisField), Const(n: Int))     => Some((intValueValidation(field.id, field.id + id, n, "<=", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case >(Value(ThisField), Const(n: Int))      => Some((intValueValidation(field.id, field.id + id, n, ">", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case >=(Value(ThisField), Const(n: Int))     => Some((intValueValidation(field.id, field.id + id, n, ">=", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case ===(Value(ThisField), Const(n: Int))    => Some((intValueValidation(field.id, field.id + id, n, "==", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case <(Value(ThisField), Const(n: Double))   => Some((doubleValueValidation(field.id, field.id + id, n, "<", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case <=(Value(ThisField), Const(n: Double))  => Some((doubleValueValidation(field.id, field.id + id, n, "<=", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case >(Value(ThisField), Const(n: Double))   => Some((doubleValueValidation(field.id, field.id + id, n, ">", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case >=(Value(ThisField), Const(n: Double))  => Some((doubleValueValidation(field.id, field.id + id, n, ">=", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case ===(Value(ThisField), Const(n: Double)) => Some((doubleValueValidation(field.id, field.id + id, n, "==", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case <(Value(ThisField), Const(n: String))   => Some((stringValueValidation(field.id, field.id + id, n, "<", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case <=(Value(ThisField), Const(n: String))  => Some((stringValueValidation(field.id, field.id + id, n, "<=", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case >(Value(ThisField), Const(n: String))   => Some((stringValueValidation(field.id, field.id + id, n, ">", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case >=(Value(ThisField), Const(n: String))  => Some((stringValueValidation(field.id, field.id + id, n, ">=", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case ===(Value(ThisField), Const(n: String)) => Some((stringValueValidation(field.id, field.id + id, n, "==", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case <(Value(ThisField), Value(ref))         => Some((valueRefValidation(field.id, field.id + id, ref, "<", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case <=(Value(ThisField), Value(ref))        => Some((valueRefValidation(field.id, field.id + id, ref, "<=", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case >(Value(ThisField), Value(ref))         => Some((valueRefValidation(field.id, field.id + id, ref, ">", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case >=(Value(ThisField), Value(ref))        => Some((valueRefValidation(field.id, field.id + id, ref, ">=", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case ===(Value(ThisField), Value(ref))       => Some((valueRefValidation(field.id, field.id + id, ref, "==", if (customErr.isEmpty) rule.error else customErr), field.id + id))
+            case _                                       => None
+          }
       }
     }
+    // Create a rule list from the rule supplied. This filters AndRules out, which makes it easier to create a unique id for each solution
     val rules = ruleList(rule1)
-    (for (i <- 0 until rules.length)
-      yield ruleHelper(rules(i),field,form,customErr,i)).toList
+    // Get all optional solutions
+    val optionalSolutions = for (i <- 0 until rules.length)
+    yield ruleHelper(rules(i), field, form, customErr, i)
+    // Iterate over each option and convert the real solutions to a list
+    (for {
+      option <- optionalSolutions
+      solution <- option
+    } yield solution).toList
   }
 
   // Extract the function name of a function
@@ -63,7 +78,7 @@ object JavaScriptBuilder {
           val ruleFunctionTuples = ruleToFunctions(rule, field, form)
           val functions = ruleFunctionTuples.map(functionAndUniqueId => functionAndUniqueId._1)
           val functionNamesAndUniqueIds = ruleFunctionTuples.map(functionAndUniqueId => (functionNameExtractor(functionAndUniqueId._1), functionAndUniqueId._2))
-          functions.mkString("") + fieldValidation(functionNamesAndUniqueIds, field.id).mkString("") :: fieldsHelper(xs)
+          functions.mkString("") + fieldValidation(functionNamesAndUniqueIds, field).mkString("") :: fieldsHelper(xs)
         case None       => fieldsHelper(xs)
       }
     }
@@ -79,7 +94,7 @@ object JavaScriptBuilder {
     """
       |function validateForm() {
       | """.stripMargin + // Validate each field when a user tries to submit the form
-      (for {field <- form.fields.filter(f => filterSubmit(f))} yield "   validate%s();".format(field.id)).mkString("\n") +
+      (for {field <- form.fields.filter(f => filterSubmit(f)).filter(f=>f.rule!=None)} yield "   validate%s();".format(field.id)).mkString("\n") +
       """
         |    var formContainer = document.getElementById("%s");
         |    var inputElements = formContainer.getElementsByTagName("input");
@@ -109,11 +124,16 @@ object JavaScriptBuilder {
         return false;
     }""".format(functionNameAndUniqueId._1, functionNameAndUniqueId._2)
 
-  private def fieldValidation(functionNames: Seq[(String, String)], fieldId: String): String =
+  private def idHelper(field: Field) = field match {
+    case Radio(_,_,_,_) => field.name
+    case _              => field.id
+  }
+
+  private def fieldValidation(functionNames: Seq[(String, String)], field: Field): String =
     """
       |function validate%s() {
       |    var xErrField = document.getElementById("errMsg%s");
-      |    var x = document.getElementById("%s");""".format(fieldId, fieldId, fieldId).stripMargin +
+      |    var x = document.getElementById("%s");""".format(idHelper(field), field.id, field.id).stripMargin +
       (for {fn <- functionNames} yield functionValidationHelper(fn)).mkString("") +
       """
         |    x.setAttribute("validField", "valid");
@@ -204,7 +224,21 @@ object JavaScriptBuilder {
       |function validateRequired%s() {
       |    var x = document.getElementById("%s");
       |    return x.value;
-      |}
-    """.format(uniqueId, fieldId).stripMargin + jsErrMsg(uniqueId, errMsg)
+      |}""".format(uniqueId, fieldId).stripMargin + jsErrMsg(uniqueId, errMsg)
+  }
+
+  def radioRequiredValidation(groupId: String, uniqueId: String, errMsg: String): String = {
+    """
+      |function validateRadio%s() {
+      |    var checked = false;
+      |    var radios = document.getElementsByName("%s");
+      |    for (var i = 0, radio; radio = radios[i]; i++) {
+      |        if (radio.checked) {
+      |            checked = true;
+      |            break;
+      |        }
+      |    }
+      |    return checked;
+      |}""".format(uniqueId, groupId).stripMargin + jsErrMsg(uniqueId, errMsg)
   }
 }

@@ -7,8 +7,9 @@ object TestRunner extends App {
     name = "Super Cool Form",
     method = Post,
     action = "/test",
-    Text("Email") withStyle Label <> "Email" withRule OK && OK && (OK withError "hurra"),
-    Text("Test") withStyle Label <> "Test",
+    Radio("gruppe1","ja") withRule Required,
+    Radio("gruppe1","nej"),
+    Text("hej"),
     Submit("Send information")
   )
 

@@ -35,7 +35,7 @@ object HtmlBuilder {
     }
 
     // Value string helper
-    def valueHelper(value: String): String = if (value.isEmpty) "" else "\"" + """ value="%s"""".format(value)
+    def valueHelper(value: String): String = if (value.isEmpty) "" else """ value="%s"""".format(value)
 
     // If we are creating Html with validation, create a placeholder for JavaScript to output the error message to
     lazy val validationErrorPlaceholder = if (validate && field.rule!=None) """<errMsg id="errMsg""" + field.id + """"></errMsg>""" else ""
