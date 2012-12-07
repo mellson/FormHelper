@@ -5,12 +5,13 @@ import dk.itu.formhelper.FormHelper._
 
 object TestRunner extends App {
   def testForm = Form(
-    name = "Form",
+    name = "Dittes",
     method = Post,
     action = "/test",
-    Text("Email") withStyle Label <> "Anders" withRule OK,
+    Text("Email") withStyle Label <> "Email" withRule OK,
     Submit("Send information")
   )
 
-  println(JavaScriptBuilder.validationScriptForForm(testForm))
+  println(testForm.htmlWithValidation)
+//  println(JavaScriptBuilder.validationScriptForForm(testForm))
 }

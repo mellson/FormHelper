@@ -15,20 +15,23 @@ object JavaScriptBuilder {
   }
 
   // Returns a tuple with the validation function and a unique id for each rule in a rule list
-  private def ruleToFunctionTuples(rule: Rule, field: Field, form: Form, idCounter: Long = 0, customErr: String = ""): List[(String, String)] = rule match {
-    case AndRule(r1, r2)        => ruleToFunctionTuples(r1, field, form, idCounter + idGenerator.nextId) ++ ruleToFunctionTuples(r2, field, form, idCounter + idGenerator.nextId)
-    case OK(error)              => (okValidation(field.id + idCounter, if (customErr.isEmpty) error else customErr), field.id + idCounter) :: Nil
-    case FAIL(error)            => (failValidation(field.id + idCounter, if (customErr.isEmpty) error else customErr), field.id + idCounter) :: Nil
-    case Required(error)        => (requiredValidation(field.id, field.id + idCounter, if (customErr.isEmpty) error else customErr), field.id + idCounter) :: Nil
-    case MatchRegex(regex)      => (regexValidation(field.id, field.id + idCounter, regex, if (customErr.isEmpty) rule.error else customErr, shouldMatch = true), field.id + idCounter) :: Nil
-    case DoNotMatchRegex(regex) => (regexValidation(field.id, field.id + idCounter, regex, if (customErr.isEmpty) rule.error else customErr, shouldMatch = false), field.id + idCounter) :: Nil
-    case ErrorRule(r, error)    => ruleToFunctionTuples(r, field, form, idCounter, error)
-    case <(e1, e2)              => ("error", field.id + idCounter) :: Nil
-    case <=(e1, e2)             => ("error", field.id + idCounter) :: Nil
-    case >(e1, e2)              => ("error", field.id + idCounter) :: Nil
-    case >=(e1, e2)             => ("error", field.id + idCounter) :: Nil
-    case ===(e1, e2)            => ("error", field.id + idCounter) :: Nil
-    case !==(e1, e2)            => ("error", field.id + idCounter) :: Nil
+  private def ruleToFunctionTuples(rule: Rule, field: Field, form: Form, customErr: String = "", counter: Int = 0): List[(String, String)] = {
+    val id = idGenerator.nextId
+    rule match {
+      case AndRule(r1, r2) => ruleToFunctionTuples(r1, field, form) ++ ruleToFunctionTuples(r2, field, form)
+      case ErrorRule(r, error) => ruleToFunctionTuples(r, field, form, error)
+      case OK(error) => (okValidation(field.id + id, if (customErr.isEmpty) error else customErr), field.id + id) :: Nil
+      case FAIL(error) => (failValidation(field.id + id, if (customErr.isEmpty) error else customErr), field.id + id) :: Nil
+      case Required(error) => (requiredValidation(field.id, field.id + id, if (customErr.isEmpty) error else customErr), field.id + id) :: Nil
+      case MatchRegex(regex) => (regexValidation(field.id, field.id + id, regex, if (customErr.isEmpty) rule.error else customErr, shouldMatch = true), field.id + id) :: Nil
+      case DoNotMatchRegex(regex) => (regexValidation(field.id, field.id + id, regex, if (customErr.isEmpty) rule.error else customErr, shouldMatch = false), field.id + id) :: Nil
+      case <(e1, e2) => ("error", field.id + id) :: Nil
+      case <=(e1, e2) => ("error", field.id + id) :: Nil
+      case >(e1, e2) => ("error", field.id + id) :: Nil
+      case >=(e1, e2) => ("error", field.id + id) :: Nil
+      case ===(e1, e2) => ("error", field.id + id) :: Nil
+      case !==(e1, e2) => ("error", field.id + id) :: Nil
+    }
   }
 
   // Extract the function name of a function
@@ -37,30 +40,33 @@ object JavaScriptBuilder {
   // Returns JavaScript for validating a form
   def validationScriptForForm(form: Form): String = {
     def fieldsHelper(fields: List[Field]): List[String] = fields match {
-      case Nil         => Nil
+      case Nil => Nil
       case field :: xs => field.rule match {
         case Some(rule) =>
           val ruleFunctionTuples = ruleToFunctionTuples(rule, field, form)
           val functions = ruleFunctionTuples.map(functionAndUniqueId => functionAndUniqueId._1)
           val functionNamesAndUniqueIds = ruleFunctionTuples.map(functionAndUniqueId => (functionNameExtractor(functionAndUniqueId._1), functionAndUniqueId._2))
           functions.mkString("") + fieldValidation(functionNamesAndUniqueIds, field.id).mkString("") :: fieldsHelper(xs)
-        case None       => fieldsHelper(xs)
+        case None => fieldsHelper(xs)
       }
     }
-    "<script>" + fieldsHelper(form.fields.toList).mkString("") + formValidationScript(form) + "\n</script>"
+    "\n<script>" + fieldsHelper(form.fields.toList).mkString("") + formValidationScript(form) + "\n</script>"
   }
 
-  private def formValidationScript(form: Form): String = {
-    def filterSubmit(field: Field) = field match {
-      case Submit(_, _, _, _) => false
-      case _                  => true
-    }
+  private def filterSubmit(field: Field) = field match {
+    case Submit(_, _, _, _) => false
+    case _ => true
+  }
+
+  private def formValidationScript(form: Form): String =
     """
       |function validateForm() {
       | """.stripMargin + // Validate each field when a user tries to submit the form
       (for {field <- form.fields.filter(f => filterSubmit(f))} yield "   validate%s();".format(field.id)).mkString("\n") +
       """
-        |    var inputElements = document.getElementsByTagName("input");
+        |    var formContainer = document.getElementById("%s");
+        |    var inputElements = formContainer.getElementsByTagName("input");
+        |    console.log(inputElements);
         |    for (var i = 0; i < inputElements.length; i++) {
         |        var vf = inputElements[i].getAttribute("validField");
         |        if (vf == "notValid" || vf == "") {
@@ -76,8 +82,7 @@ object JavaScriptBuilder {
         |        }
         |    }
         |    return true;
-        |}""".stripMargin
-  }
+        |}""".format(form.id).stripMargin
 
   private def functionValidationHelper(functionNameAndUniqueId: (String, String)): String =
     """
@@ -86,7 +91,6 @@ object JavaScriptBuilder {
         xErrField.innerHTML = %serrMsg;
         return false;
     }""".format(functionNameAndUniqueId._1, functionNameAndUniqueId._2)
-
 
   private def fieldValidation(functionNames: Seq[(String, String)], fieldId: String): String =
     """
