@@ -7,8 +7,8 @@ object TestRunner extends App {
     name = "Super Cool Form",
     method = Post,
     action = "/test",
-    Checkbox("gruppe1", "ja") withStyle Label > "Ja1",
-    Checkbox("gruppe1", "nej") withStyle Label > "Nej1" withRule Required,
+    Password("kode"),
+    Text("test") withStyle Label <> "Ja" withRule DoubleValue === 40.5,
     Submit("Send Information")
   )
 

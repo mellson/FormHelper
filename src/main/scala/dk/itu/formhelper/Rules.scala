@@ -1,8 +1,6 @@
 package dk.itu.formhelper
 
 //import scala.language.implicitConversions
-
-
 trait Rules {
 
   sealed abstract class FieldRef {
@@ -95,7 +93,6 @@ trait Rules {
   object FAIL extends FAIL(error = " FAIL ")
 
   case class Required(error: String) extends Rule
-
 
   object Required extends Required(error = "this is required")
 

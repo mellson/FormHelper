@@ -53,6 +53,18 @@ object FormHelper extends Styles with Rules {
     else AndStyle(existingStyle.get, newStyle)
   }
 
+  case class Hidden(name: String, value: String = "", rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
+    def id = name
+
+    def inputType = "hidden"
+
+    def withRule(r: Rule): Hidden = Hidden(name, value, Some(addRule(r, rule)), style)
+
+    def withStyle(s: Style): Hidden = Hidden(name, value, rule, Some(addStyle(s, style)))
+
+    def setValue(v: String): Hidden = Hidden(name, v, rule, style)
+  }
+
   case class Text(name: String, value: String = "", rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
     def id = name
 

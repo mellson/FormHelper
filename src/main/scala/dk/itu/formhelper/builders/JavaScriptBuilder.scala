@@ -162,16 +162,16 @@ object JavaScriptBuilder {
 
   private def doubleValueValidation(fieldId: String, uniqueId: String, value: Double, operator: String, errMsg: String) =
     """
-      |function validateIntValue%s() {
+      |function validateDoubleValue%s() {
       |    var x = document.getElementById("%s");
       |    return x.value %s %f;
       |}""".format(uniqueId, fieldId, operator, value).stripMargin + jsErrMsg(uniqueId, errMsg)
 
   private def stringValueValidation(fieldId: String, uniqueId: String, value: String, operator: String, errMsg: String) =
     """
-      |function validateIntValue%s() {
+      |function validateStringValue%s() {
       |    var x = document.getElementById("%s");
-      |    return x.value %s %s;
+      |    return x.value %s "%s";
       |}""".format(uniqueId, fieldId, operator, value).stripMargin + jsErrMsg(uniqueId, errMsg)
 
   // Helps get the correct reference for the ref validators.
