@@ -27,20 +27,29 @@ object HtmlBuilder {
 
   }
 
+  def styleContainsLabelAfter(style: Style) = {
+    def helper(sl: List[Style]): Boolean = sl match {
+      case Nil                   => false
+      case Label(_, After) :: xs => true
+      case _ :: xs               => helper(xs)
+    }
+    helper(styleList(style))
+  }
+
   def fieldHtml(field: Field, validate: Boolean): String = {
     // Adds validation method to a Field
     def validationHelper(field: Field, validate: Boolean): String = field match {
       case Submit(_, _, _, _) => ""
-      case _                  => if (validate && field.rule!=None) " onblur=\"validate" + field.name + "('" + field.name + "')\" validField=\"\"" else ""
+      case _                  => if (validate && field.rule != None) " onblur=\"validate" + field.name + "('" + field.name + "')\" validField=\"\"" else ""
     }
 
     // Value string helper
     def valueHelper(value: String): String = if (value.isEmpty) "" else """ value="%s"""".format(value)
 
     // If we are creating Html with validation, create a placeholder for JavaScript to output the error message to
-    lazy val validationErrorPlaceholder = if (validate && field.rule!=None) """<errMsg id="errMsg""" + field.id + """"></errMsg>""" else ""
+    lazy val validationErrorPlaceholder = if (validate && field.rule != None && !styleContainsLabelAfter(field.style.getOrElse(EmptyStyle))) """<errMsg id="errMsg""" + field.id + """"></errMsg>""" else ""
 
-    val htmlStart = """<input type="%s" name="%s" id="%s"""".format(field.inputType,field.name,field.id) + valueHelper(field.value)
+    val htmlStart = """<input type="%s" name="%s" id="%s"""".format(field.inputType, field.name, field.id) + valueHelper(field.value)
     val htmlEnd = validationHelper(field, validate) + ">" + validationErrorPlaceholder
 
     lazy val fieldInfoStart = "\n" + indent + indent + "<field_message class=\"info\">"
@@ -50,11 +59,12 @@ object HtmlBuilder {
     def styleHelper(styles: List[Style], html: String): String = styles match {
       case Label(label, placement) :: xs => placement match {
         case Before => label + styleHelper(xs, html)
-        case After  => styleHelper(xs, html) + label
+        // Wrapping a label placed after the field in a labelElement so that JavaScript has a place to write error messages
+        case After => styleHelper(xs, html) + """<labelElem id="label%s">%s </labelElem>""".format(field.id, label)
         // HTML 5 feature
         case Inside => styleHelper(xs, html + " placeholder=\"" + label + "\"")
       }
-      // Radio button checked
+      // Radio button or Checkbox checked
       case Checked :: xs => styleHelper(xs, html + " checked")
 
       case Error(err) :: xs       => styleHelper(xs, html + " validField=\"notValid\"") + fieldErrorStart + err + fieldEnd

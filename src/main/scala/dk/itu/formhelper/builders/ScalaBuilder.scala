@@ -20,14 +20,14 @@ object ScalaBuilder {
 
   // Evaluates a field and return an Option[Error String]. It returns None if the field validated.
   def validateField(rule: Rule, field: Field, form: Form): Option[String] = field match {
-    case Radio(_, _, _, _)  =>
+    case Radio(_, _, _, _) | Checkbox(_, _, _, _) =>
       if (ruleList(rule).contains(Required)) {
-        val anyRadioFromGroupChecked = !form.fields.filter(f => f.name == field.name).filter(f => styleList(f.style.getOrElse(EmptyStyle)).contains(Checked)).isEmpty
-        if (anyRadioFromGroupChecked) None
+        val anyFieldFromGroupChecked = !form.fields.filter(f => f.name == field.name).filter(f => styleList(f.style.getOrElse(EmptyStyle)).contains(Checked)).isEmpty
+        if (anyFieldFromGroupChecked) None
         else Some(rule.error)
       } else None
-    case Submit(_, _, _, _) => None
-    case _                  => {
+    case Submit(_, _, _, _)                       => None
+    case _                                        => {
       sealed abstract class Operation
       case object Below extends Operation
       case object BelowOrEqual extends Operation
@@ -81,16 +81,16 @@ object ScalaBuilder {
         case >(Length(ThisField), Length(ref))       => if (refHelper(ref, field.value.length, Above, (s: String) => s.length)) None else Some(rule.error)
         case >=(Length(ThisField), Length(ref))      => if (refHelper(ref, field.value.length, AboveOrEqual, (s: String) => s.length)) None else Some(rule.error)
         case ===(Length(ThisField), Length(ref))     => if (refHelper(ref, field.value.length, Equal, (s: String) => s.length)) None else Some(rule.error)
-        case <(Value(ThisField), Const(n: Int))      => if (field.value.toInt < n) None else Some(rule.error)
-        case <=(Value(ThisField), Const(n: Int))     => if (field.value.toInt <= n) None else Some(rule.error)
-        case >(Value(ThisField), Const(n: Int))      => if (field.value.toInt > n) None else Some(rule.error)
-        case >=(Value(ThisField), Const(n: Int))     => if (field.value.toInt >= n) None else Some(rule.error)
-        case ===(Value(ThisField), Const(n: Int))    => if (field.value.toInt == n) None else Some(rule.error)
-        case <(Value(ThisField), Const(n: Double))   => if (field.value.toDouble < n) None else Some(rule.error)
-        case <=(Value(ThisField), Const(n: Double))  => if (field.value.toDouble <= n) None else Some(rule.error)
-        case >(Value(ThisField), Const(n: Double))   => if (field.value.toDouble > n) None else Some(rule.error)
-        case >=(Value(ThisField), Const(n: Double))  => if (field.value.toDouble >= n) None else Some(rule.error)
-        case ===(Value(ThisField), Const(n: Double)) => if (field.value.toDouble == n) None else Some(rule.error)
+        case <(Value(ThisField), Const(n: Int))      => if (!field.value.isEmpty && field.value.toInt < n) None else Some(rule.error)
+        case <=(Value(ThisField), Const(n: Int))     => if (!field.value.isEmpty && field.value.toInt <= n) None else Some(rule.error)
+        case >(Value(ThisField), Const(n: Int))      => if (!field.value.isEmpty && field.value.toInt > n) None else Some(rule.error)
+        case >=(Value(ThisField), Const(n: Int))     => if (!field.value.isEmpty && field.value.toInt >= n) None else Some(rule.error)
+        case ===(Value(ThisField), Const(n: Int))    => if (!field.value.isEmpty && field.value.toInt == n) None else Some(rule.error)
+        case <(Value(ThisField), Const(n: Double))   => if (!field.value.isEmpty && field.value.toDouble < n) None else Some(rule.error)
+        case <=(Value(ThisField), Const(n: Double))  => if (!field.value.isEmpty && field.value.toDouble <= n) None else Some(rule.error)
+        case >(Value(ThisField), Const(n: Double))   => if (!field.value.isEmpty && field.value.toDouble > n) None else Some(rule.error)
+        case >=(Value(ThisField), Const(n: Double))  => if (!field.value.isEmpty && field.value.toDouble >= n) None else Some(rule.error)
+        case ===(Value(ThisField), Const(n: Double)) => if (!field.value.isEmpty && field.value.toDouble == n) None else Some(rule.error)
         case <(Value(ThisField), Const(n: String))   => if (field.value < n) None else Some(rule.error)
         case <=(Value(ThisField), Const(n: String))  => if (field.value <= n) None else Some(rule.error)
         case >(Value(ThisField), Const(n: String))   => if (field.value > n) None else Some(rule.error)
@@ -116,27 +116,26 @@ object ScalaBuilder {
 
   // Converts HTTP Post data to a FormHelper.Form
   def formFromPost(form: Form, postData: Option[Map[String, Seq[String]]]): Form = {
-    // Checks if the data value should be added. Need this check because Radio fields are a bit weird.
-    def dataHelper(field: Field, data: String, name: String): Field = field match {
-      case Radio(groupName, value, _, _) =>
-        // Add checked to the radio that is checked
-        if (groupName == name && data == value) field setValue data
+    // Checks if the data value should be added. Need this check because Radio and checkbox fields are a bit weird.
+    def dataHelper(field: Field, data: Seq[String], name: String): Field = field match {
+      case Radio(_, _, _, _) | Checkbox(_, _, _, _) =>
+        if (field.name == name && data.contains(field.value)) field setValue "checked"
         else field
-      case _                             => field setValue data
+      case _                                        => field setValue data.head
     }
 
     /* If a field is a member of a group that has a required rule, add that rule to all members of the group
      * The method takes a field and returns a field with the added rule if necessary
      */
     def addGroupRequired(field: Field): Field = field match {
-      case Radio(_, _, _, _) =>
+      case Radio(_, _, _, _) | Checkbox(_, _, _, _) =>
         val groupContainsRequired = !form.fields.filter(f => f.name == field.name).filter(f => ruleList(f.rule.getOrElse(EmptyRule)).contains(Required)).isEmpty
         val selfContainsRequired = ruleList(field.rule.getOrElse(EmptyRule)).contains(Required)
         if (groupContainsRequired)
           if (selfContainsRequired) field
           else field withRule Required
         else field
-      case _                 => field
+      case _                                        => field
     }
 
     // Get all the fields that has data in the post
@@ -145,8 +144,7 @@ object ScalaBuilder {
       (name, dataSeq) <- dataMap
       fields = form.fields.filter(field => field.name == name)
       field <- fields
-      data <- dataSeq
-      fieldWithData = dataHelper(field, data, name)
+      fieldWithData = dataHelper(field, dataSeq, name)
     } yield fieldWithData
 
     // If there was fields with data combine them with the rest of the fields

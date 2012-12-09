@@ -103,6 +103,20 @@ object FormHelper extends Styles with Rules {
     def setChecked(b: Boolean) = if (b) Radio(name, value, rule, Some(addStyle(Checked, style))) else Radio(name, value, rule, style)
   }
 
+  case class Checkbox(name: String, value: String, rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
+    def id = name + value
+
+    def inputType = "checkbox"
+
+    def withRule(r: Rule): Checkbox = Checkbox(name, value, Some(addRule(r, rule)), style)
+
+    def withStyle(s: Style): Checkbox = Checkbox(name, value, rule, Some(addStyle(s, style)))
+
+    def setValue(v: String): Checkbox = Checkbox(name, value, rule, Some(addStyle(Checked, style)))
+
+    def setChecked(b: Boolean) = if (b) Checkbox(name, value, rule, Some(addStyle(Checked, style))) else Checkbox(name, value, rule, style)
+  }
+
   // Converts a style to a list of styles
   def styleList(style: Style): List[Style] = style match {
     case AndStyle(s1, s2) => styleList(s1) ++ styleList(s2)

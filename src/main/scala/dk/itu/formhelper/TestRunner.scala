@@ -7,13 +7,11 @@ object TestRunner extends App {
     name = "Super Cool Form",
     method = Post,
     action = "/test",
-    Radio("gruppe1","ja") withRule Required,
-    Radio("gruppe1","nej"),
-    Text("hej") withRule Required,
-    Text("Anders") withRule IntValue === 40,
+    Checkbox("gruppe1", "ja") withStyle Label > "Ja1",
+    Checkbox("gruppe1", "nej") withStyle Label > "Nej1" withRule Required,
     Submit("Send Information")
   )
 
-  println(testForm.htmlWithValidation)
+  //  println(testForm.htmlWithValidation)
 
 }

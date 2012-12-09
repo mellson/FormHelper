@@ -4,15 +4,15 @@ import dk.itu.formhelper.FormHelper._
 
 object JavaScriptBuilder {
   // Returns a tuple with the validation function and a unique id for each rule in a rule list
-  def ruleToFunctions(rule1: Rule, field: Field, form: Form, customErr: String = ""): List[(String, String)] = {
+  private def ruleToFunctions(rule1: Rule, field: Field, form: Form, customErr: String = ""): List[(String, String)] = {
     def ruleHelper(rule: Rule, field: Field, form: Form, customErr: String = "", id: Int = 0): Option[(String, String)] = {
       field match {
-        case Submit(_, _, _, _) => None
-        case Radio(_, _, _, _)  =>
+        case Submit(_, _, _, _)                       => None
+        case Radio(_, _, _, _) | Checkbox(_, _, _, _) =>
           if (ruleList(rule1).contains(Required)) {
             Some(radioRequiredValidation(field.id, field.name, field.id + id, if (customErr.isEmpty) rule.error else customErr), field.id + id)
           } else None
-        case _                  =>
+        case _                                        =>
           rule match {
             case ErrorRule(r, error)                     => ruleHelper(r, field, form, error, id)
             case OK(error)                               => Some((okValidation(field.id + id, if (customErr.isEmpty) error else customErr), field.id + id))
@@ -78,7 +78,7 @@ object JavaScriptBuilder {
           val ruleFunctionTuples = ruleToFunctions(rule, field, form)
           val functions = ruleFunctionTuples.map(functionAndUniqueId => functionAndUniqueId._1)
           val functionNamesAndUniqueIds = ruleFunctionTuples.map(functionAndUniqueId => (functionNameExtractor(functionAndUniqueId._1), functionAndUniqueId._2))
-          functions.mkString("") + fieldValidation(functionNamesAndUniqueIds, field).mkString("") :: fieldsHelper(xs)
+          functions.mkString("") + fieldValidation(functionNamesAndUniqueIds, field).mkString("") + errHelperIfLabelAfter(field) :: fieldsHelper(xs)
         case None       => fieldsHelper(xs)
       }
     }
@@ -93,7 +93,7 @@ object JavaScriptBuilder {
   private def formValidationScript(form: Form): String =
     """
       |function validateForm() {
-      |""".stripMargin + // Validate each field when a user tries to submit the form
+      | """.stripMargin + // Validate each field when a user tries to submit the form
       (for {field <- form.fields} yield """    document.getElementById("%s").focus();""".format(field.id)).mkString("\n") +
       """
         |    var ok = false;
@@ -126,8 +126,8 @@ object JavaScriptBuilder {
     }""".format(functionNameAndUniqueId._1, functionNameAndUniqueId._2)
 
   private def idHelper(field: Field) = field match {
-    case Radio(_,_,_,_) => field.name
-    case _              => field.id
+    case Radio(_, _, _, _) | Checkbox(_, _, _, _) => field.name
+    case _                                        => field.id
   }
 
   private def fieldValidation(functionNames: Seq[(String, String)], field: Field): String =
@@ -208,7 +208,7 @@ object JavaScriptBuilder {
       |    return false;
       |}""".format(uniqueId).stripMargin + jsErrMsg(uniqueId, errMsg)
 
-  def regexValidation(fieldId: String, uniqueId: String, regex: String, errMsg: String, shouldMatch: Boolean): String = {
+  private def regexValidation(fieldId: String, uniqueId: String, regex: String, errMsg: String, shouldMatch: Boolean): String = {
     """
       |function validateRegex%s() {
       |    var x = document.getElementById("%s");
@@ -220,7 +220,7 @@ object JavaScriptBuilder {
       |}""".format(uniqueId, fieldId, regex, shouldMatch, !shouldMatch).stripMargin + jsErrMsg(uniqueId, errMsg)
   }
 
-  def requiredValidation(fieldId: String, uniqueId: String, errMsg: String): String = {
+  private def requiredValidation(fieldId: String, uniqueId: String, errMsg: String): String = {
     """
       |function validateRequired%s() {
       |    var x = document.getElementById("%s");
@@ -228,7 +228,7 @@ object JavaScriptBuilder {
       |}""".format(uniqueId, fieldId).stripMargin + jsErrMsg(uniqueId, errMsg)
   }
 
-  def radioRequiredValidation(fieldId: String, groupId: String, uniqueId: String, errMsg: String): String = {
+  private def radioRequiredValidation(fieldId: String, groupId: String, uniqueId: String, errMsg: String): String = {
     """
       |function validateRadio%s() {
       |    var checked = false;
@@ -241,5 +241,20 @@ object JavaScriptBuilder {
       |    }
       |    return checked;
       |}""".format(fieldId, groupId).stripMargin + jsErrMsg(uniqueId, errMsg)
+  }
+
+
+  private def errHelperIfLabelAfter(field: Field): String = {
+    if (HtmlBuilder.styleContainsLabelAfter(field.style.getOrElse(EmptyStyle)))
+      """
+        |window.onload = function() {
+        |var btn=document.createElement("errMsg");
+        |btn.setAttribute("id","errMsg%s");
+        |var t=document.createTextNode(" ");
+        |btn.appendChild(t);
+        |document.getElementById("label%s").appendChild(btn);
+        |}
+      """.format(field.id, field.id).stripMargin
+    else ""
   }
 }
