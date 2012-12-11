@@ -7,6 +7,7 @@ object FormHelper extends Styles with Rules {
   final case class Form(name: String, method: Method, action: String, fields: Field*) {
     lazy val html: String = HtmlBuilder.formHtml(this, validate = false)
     lazy val htmlWithValidation: String = HtmlBuilder.formHtml(this, validate = true) + JavaScriptBuilder.validationScriptForForm(this)
+    lazy val validationScript: String = JavaScriptBuilder.validationScriptForForm(this)
     lazy val id: String = name.replaceAll(" ", "").toLowerCase
 
     def validatedForm(postData: Option[Map[String, Seq[String]]]): (Boolean, Form) = {
@@ -139,8 +140,10 @@ object FormHelper extends Styles with Rules {
   // Converts a rule to a list of rules
   def ruleList(rule: Rule): List[Rule] = rule match {
     case AndRule(r1, r2) => ruleList(r1) ++ ruleList(r2)
-    case EmptyRule       => Nil
-    case r               => List(r)
+    //    case ErrorRule(r,err)=>
+    case EmptyRule => Nil
+    case r         => List(r)
+    //    case ShowWhen(ref,r,err) => ShowWhen(ref,ruleList(r),err)
   }
 }
 

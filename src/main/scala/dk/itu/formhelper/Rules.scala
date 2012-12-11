@@ -5,10 +5,14 @@ trait Rules {
 
   sealed abstract class FieldRef {
     def name: String
+
+    def id: String
   }
 
   case object ThisField extends FieldRef {
     def name = "this field"
+
+    def id = name
   }
 
   case class FieldId(id: String) extends FieldRef {
@@ -72,13 +76,16 @@ trait Rules {
   sealed abstract class Rule {
     def error: String
 
+    // Assign custom error to a rule
     def withError(err: => String) = ErrorRule(this, err)
 
-    def &&(rule: Rule) = AndRule(this, rule)
+    // Assign custom error to a rule. This method name binds stronger and can therefor be used without adding parentheses
+    def |>(err: => String) = withError(err)
 
-    // TODO use this to toggle extra fields?
-    def andThen(rule: => Rule) = &&(rule)
+    def &&(rule: Rule) = AndRule(this, rule)
   }
+
+  case class ShowWhen(id: FieldRef, rule: Rule, error: String) extends Rule
 
   case class EmptyRule(error: String) extends Rule
 

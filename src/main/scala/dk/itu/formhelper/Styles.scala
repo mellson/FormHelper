@@ -52,14 +52,14 @@ trait Styles {
     val compValue = 4
   }
 
-  final case class Error(err: String) extends Style {
+  final case class ShowError(err: String) extends Style {
     val compValue = 6
   }
 
-  object Error extends Style {
+  object ShowError extends Style {
     val compValue = 6
 
-    def ===(err: String) = Error(err)
+    def ===(err: String) = ShowError(err)
   }
 
 }

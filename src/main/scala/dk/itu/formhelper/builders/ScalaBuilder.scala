@@ -18,7 +18,7 @@ object ScalaBuilder {
     !errorsIn(errOptions)
   }
 
-  // Evaluates a field and return an Option[Error String]. It returns None if the field validated.
+  // Evaluates a field and return an Option[ShowError String]. It returns None if the field validated.
   def validateField(rule: Rule, field: Field, form: Form): Option[String] = field match {
     case Radio(_, _, _, _) | Checkbox(_, _, _, _) =>
       if (ruleList(rule).contains(Required)) {
@@ -70,6 +70,7 @@ object ScalaBuilder {
           } yield opHelper(fieldValue, otherValue, op)
           !booleanList.contains(false)
       }
+
       rule match {
         case <(Length(ThisField), Const(n: Int))     => if (field.value.length < n) None else Some(rule.error)
         case <=(Length(ThisField), Const(n: Int))    => if (field.value.length <= n) None else Some(rule.error)
@@ -103,13 +104,13 @@ object ScalaBuilder {
         case ===(Value(ThisField), Value(ref))       => if (refHelper(ref, field.value, Equal, (s: String) => s)) None else Some(rule.error)
         case MatchRegex(regex)                       => if (field.value.matches(regex)) None else Some(rule.error)
         case DoNotMatchRegex(regex)                  => if (!field.value.matches(regex)) None else Some(rule.error)
-        case OK(err)                                 => None
-        case FAIL(err)                               => Some(err)
         case Required(err)                           => if (!field.value.isEmpty) None else Some(err)
         case AndRule(r1, r2)                         => if (validateField(r1, field, form) == None) if (validateField(r2, field, form) == None) None else Some(r2.error) else Some(r1.error)
         case ErrorRule(rule1, err)                   => if (validateField(rule1, field, form) == None) None else Some(err)
+        case ShowWhen(id, r, err)                    => None
         case EmptyRule(err)                          => None
-        case x                                       => Some("unknown error in Validator.Scala" + x)
+        case OK(err)                                 => None
+        case FAIL(err)                               => Some(err)
       }
     }
   }
@@ -164,7 +165,7 @@ object ScalaBuilder {
         newFields = if (!dataFields.filter(f => f.id == field.id).isEmpty) dataFields.filter(f => f.id == field.id) else List(field)
         newField <- newFields
         error = validateField(newField.rule.getOrElse(EmptyRule), newField, tempForm)
-        f = if (error == None) newField else newField withStyle Error === error.get
+        f = if (error == None) newField else newField withStyle ShowError === error.get
       } yield f
 
       Form(form.name, form.method, form.action, errorFields: _*)

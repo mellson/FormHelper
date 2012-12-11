@@ -7,11 +7,10 @@ object TestRunner extends App {
     name = "Super Cool Form",
     method = Post,
     action = "/test",
-    Password("kode"),
-    Text("test") withStyle Label <> "Ja" withRule DoubleValue === 40.5,
+    Text("user"),
+    Text("field1") withRule ShowWhen(FieldId("user"), Value === "hej", "Custom err here") && Length > 2,
     Submit("Send Information")
   )
 
-  //  println(testForm.htmlWithValidation)
-
+  println(testForm.htmlWithValidation)
 }
