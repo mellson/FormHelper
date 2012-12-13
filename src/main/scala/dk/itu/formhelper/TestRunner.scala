@@ -7,7 +7,7 @@ object TestRunner extends App {
     name = "Super Cool Form",
     method = Post,
     action = "/test",
-    Text("user"),
+    Text("user") withRule Length > 10,
     Text("field1") withRule ShowWhen(FieldId("user"), Value === "hej", "Custom err here") && Length > 2,
     Submit("Send Information")
   )

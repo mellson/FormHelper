@@ -21,20 +21,18 @@ trait Rules {
 
   sealed abstract class Expr[+T] {
     def name: String
-  }
 
-  sealed abstract class ComparableExpr[T] extends Expr[T] {
-    def <(that: Expr[T]): Rule = new <(this, that)
+    def <[U](that: Expr[U]): Rule = new <(this, that)
 
-    def <=(that: Expr[T]): Rule = new <=(this, that)
+    def <=[U](that: Expr[U]): Rule = new <=(this, that)
 
-    def >(that: Expr[T]): Rule = new >(this, that)
+    def >[U](that: Expr[U]): Rule = new >(this, that)
 
-    def >=(that: Expr[T]): Rule = new >=(this, that)
+    def >=[U](that: Expr[U]): Rule = new >=(this, that)
 
-    def ===(that: Expr[T]): Rule = new ===(this, that)
+    def ===[U](that: Expr[U]): Rule = new ===(this, that)
 
-    def !==(that: Expr[T]): Rule = new !==(this, that)
+    def !==[U](that: Expr[U]): Rule = new !==(this, that)
   }
 
   implicit def liftIntToConst(n: Int): Const[Int] = Const(n)
@@ -43,13 +41,13 @@ trait Rules {
 
   implicit def liftStringToConst(s: String): Const[String] = Const(s)
 
-  case class Const[T](value: T) extends ComparableExpr[T] {
+  case class Const[T](value: T) extends Expr[T] {
     def name = value.toString
   }
 
   implicit def liftStringToLength(id: FieldRef): Length = Length(id)
 
-  case class Length(field: FieldRef) extends ComparableExpr[Int] {
+  case class Length(field: FieldRef) extends Expr[Int] {
     def name = field.name + "s length"
   }
 
@@ -57,7 +55,7 @@ trait Rules {
 
   implicit def liftStringToValueRef(id: FieldRef): Value[String] = Value[String](id)
 
-  case class Value[T](field: FieldRef) extends ComparableExpr[T] {
+  case class Value[T](field: FieldRef) extends Expr[T] {
     def name = field.name + "s value"
   }
 
