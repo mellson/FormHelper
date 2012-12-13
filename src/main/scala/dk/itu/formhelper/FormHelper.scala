@@ -140,10 +140,8 @@ object FormHelper extends Styles with Rules {
   // Converts a rule to a list of rules
   def ruleList(rule: Rule): List[Rule] = rule match {
     case AndRule(r1, r2) => ruleList(r1) ++ ruleList(r2)
-    //    case ErrorRule(r,err)=>
     case EmptyRule => Nil
     case r         => List(r)
-    //    case ShowWhen(ref,r,err) => ShowWhen(ref,ruleList(r),err)
   }
 }
 

@@ -92,7 +92,7 @@ object HtmlBuilder {
       // A field without styles
       case x :: xs => styleHelper(xs, html)
 
-      case Nil => htmlStart + html + htmlEnd //htmlStart + htmlEnd
+      case Nil => htmlStart + html + htmlEnd
     }
 
     styleHelper(styleList(field.style.getOrElse(EmptyStyle)).sorted, "")

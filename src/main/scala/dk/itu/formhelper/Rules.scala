@@ -1,6 +1,5 @@
 package dk.itu.formhelper
 
-//import scala.language.implicitConversions
 trait Rules {
 
   sealed abstract class FieldRef {
