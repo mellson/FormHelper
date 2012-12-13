@@ -86,7 +86,7 @@ object HtmlBuilder {
       // Radio button or Checkbox checked
       case Checked :: xs => styleHelper(xs, html + " checked")
 
-      case ShowError(err) :: xs   => styleHelper(xs, html + " validField=\"notValid\"") + fieldErrorStart + err + fieldEnd
+      case ShowErrors(err) :: xs   => styleHelper(xs, html + " validField=\"notValid\"") + fieldErrorStart + err + fieldEnd
       case ShowRequirements :: xs => styleHelper(xs, html) + fieldInfoStart + field.rule.getOrElse(EmptyRule).error + fieldEnd
 
       // A field without styles

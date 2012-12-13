@@ -18,7 +18,7 @@ object ScalaBuilder {
     !errorsIn(errOptions)
   }
 
-  // Evaluates a field and return an Option[ShowError String]. It returns None if the field validated.
+  // Evaluates a field and return an Option[ShowErrors String]. It returns None if the field validated.
   def validateField(rule: Rule, field: Field, form: Form): Option[String] = field match {
     case Radio(_, _, _, _) | Checkbox(_, _, _, _) =>
       if (ruleList(rule).contains(Required)) {
@@ -165,7 +165,7 @@ object ScalaBuilder {
         newFields = if (!dataFields.filter(f => f.id == field.id).isEmpty) dataFields.filter(f => f.id == field.id) else List(field)
         newField <- newFields
         error = validateField(newField.rule.getOrElse(EmptyRule), newField, tempForm)
-        f = if (error == None) newField else newField withStyle ShowError === error.get
+        f = if (error == None) newField else newField withStyle ShowErrors === error.get
       } yield f
 
       Form(form.name, form.method, form.action, errorFields: _*)
