@@ -1,0 +1,7 @@
+[validField=notValid] {
+    border:2px solid red;
+}
+
+[validField=valid] {
+    border:2px solid green;
+}
