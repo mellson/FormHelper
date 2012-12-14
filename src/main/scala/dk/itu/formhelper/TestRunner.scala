@@ -8,7 +8,7 @@ object TestRunner extends App {
     method = Post,
     action = "/test",
     Text("user"),
-    Text("field1") withRule ShowWhen(FieldId("user"), Value === "Scala"),
+    Text("field1") withRule ShowWhen(FieldId("user"), Value === "Scala") && Length > 2,
     Submit("Send Information")
   )
 
