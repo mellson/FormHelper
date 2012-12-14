@@ -6,7 +6,7 @@ object JavaScriptBuilder {
 
   // idGenerator used to have a unique id on each rule to be evaluated
   object idGenerator {
-    var id: Long = 0
+    var id: Long = -1
 
     def nextId = {
       id += 1

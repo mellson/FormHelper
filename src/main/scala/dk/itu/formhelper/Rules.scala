@@ -21,17 +21,17 @@ trait Rules {
   sealed abstract class Expr[+T] {
     def name: String
 
-    def <[U](that: Expr[U]): Rule = new <(this, that)
+    def <[U >: T](that: Expr[U]): Rule = new <(this, that)
 
-    def <=[U](that: Expr[U]): Rule = new <=(this, that)
+    def <=[U >: T](that: Expr[U]): Rule = new <=(this, that)
 
-    def >[U](that: Expr[U]): Rule = new >(this, that)
+    def >[U >: T](that: Expr[U]): Rule = new >(this, that)
 
-    def >=[U](that: Expr[U]): Rule = new >=(this, that)
+    def >=[U >: T](that: Expr[U]): Rule = new >=(this, that)
 
-    def ===[U](that: Expr[U]): Rule = new ===(this, that)
+    def ===[U >: T](that: Expr[U]): Rule = new ===(this, that)
 
-    def !==[U](that: Expr[U]): Rule = new !==(this, that)
+    def !==[U >: T](that: Expr[U]): Rule = new !==(this, that)
   }
 
   implicit def liftIntToConst(n: Int): Const[Int] = Const(n)
@@ -82,7 +82,7 @@ trait Rules {
     def &&(rule: Rule) = AndRule(this, rule)
   }
 
-  case class ShowWhen(id: FieldRef, rule: Rule, error: String) extends Rule
+  case class ShowWhen(id: FieldRef, rule: Rule, error: String = "") extends Rule
 
   case class EmptyRule(error: String) extends Rule
 
