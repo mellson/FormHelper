@@ -34,6 +34,7 @@ object ScalaBuilder {
       case object Above extends Operation
       case object AboveOrEqual extends Operation
       case object Equal extends Operation
+      case object NotEqual extends Operation
 
       // Compares the values based on the operation
       def opHelper[T](val1: T, val2: T, op: Operation) = (val1, val2) match {
@@ -43,6 +44,7 @@ object ScalaBuilder {
           case Above        => v1 > v2
           case AboveOrEqual => v1 >= v2
           case Equal        => v1 == v2
+          case NotEqual     => v1 != v2
         }
         case (v1: Double, v2: Double) => op match {
           case Below        => v1 < v2
@@ -50,6 +52,7 @@ object ScalaBuilder {
           case Above        => v1 > v2
           case AboveOrEqual => v1 >= v2
           case Equal        => v1 == v2
+          case NotEqual     => v1 != v2
         }
         case (v1: String, v2: String) => op match {
           case Below        => v1 < v2
@@ -57,6 +60,7 @@ object ScalaBuilder {
           case Above        => v1 > v2
           case AboveOrEqual => v1 >= v2
           case Equal        => v1 == v2
+          case NotEqual     => v1 != v2
         }
       }
 
@@ -77,31 +81,37 @@ object ScalaBuilder {
         case >(Length(ThisField), Const(n: Int))     => if (field.value.length > n) None else Some(rule.error)
         case >=(Length(ThisField), Const(n: Int))    => if (field.value.length >= n) None else Some(rule.error)
         case ===(Length(ThisField), Const(n: Int))   => if (field.value.length == n) None else Some(rule.error)
+        case !==(Length(ThisField), Const(n: Int))   => if (field.value.length != n) None else Some(rule.error)
         case <(Length(ThisField), Length(ref))       => if (refHelper(ref, field.value.length, Below, (s: String) => s.length)) None else Some(rule.error)
         case <=(Length(ThisField), Length(ref))      => if (refHelper(ref, field.value.length, BelowOrEqual, (s: String) => s.length)) None else Some(rule.error)
         case >(Length(ThisField), Length(ref))       => if (refHelper(ref, field.value.length, Above, (s: String) => s.length)) None else Some(rule.error)
         case >=(Length(ThisField), Length(ref))      => if (refHelper(ref, field.value.length, AboveOrEqual, (s: String) => s.length)) None else Some(rule.error)
         case ===(Length(ThisField), Length(ref))     => if (refHelper(ref, field.value.length, Equal, (s: String) => s.length)) None else Some(rule.error)
+        case !==(Length(ThisField), Length(ref))     => if (refHelper(ref, field.value.length, NotEqual, (s: String) => s.length)) None else Some(rule.error)
         case <(Value(ThisField), Const(n: Int))      => if (!field.value.isEmpty && field.value.toInt < n) None else Some(rule.error)
         case <=(Value(ThisField), Const(n: Int))     => if (!field.value.isEmpty && field.value.toInt <= n) None else Some(rule.error)
         case >(Value(ThisField), Const(n: Int))      => if (!field.value.isEmpty && field.value.toInt > n) None else Some(rule.error)
         case >=(Value(ThisField), Const(n: Int))     => if (!field.value.isEmpty && field.value.toInt >= n) None else Some(rule.error)
         case ===(Value(ThisField), Const(n: Int))    => if (!field.value.isEmpty && field.value.toInt == n) None else Some(rule.error)
+        case !==(Value(ThisField), Const(n: Int))    => if (!field.value.isEmpty && field.value.toInt != n) None else Some(rule.error)
         case <(Value(ThisField), Const(n: Double))   => if (!field.value.isEmpty && field.value.toDouble < n) None else Some(rule.error)
         case <=(Value(ThisField), Const(n: Double))  => if (!field.value.isEmpty && field.value.toDouble <= n) None else Some(rule.error)
         case >(Value(ThisField), Const(n: Double))   => if (!field.value.isEmpty && field.value.toDouble > n) None else Some(rule.error)
         case >=(Value(ThisField), Const(n: Double))  => if (!field.value.isEmpty && field.value.toDouble >= n) None else Some(rule.error)
         case ===(Value(ThisField), Const(n: Double)) => if (!field.value.isEmpty && field.value.toDouble == n) None else Some(rule.error)
+        case !==(Value(ThisField), Const(n: Double)) => if (!field.value.isEmpty && field.value.toDouble != n) None else Some(rule.error)
         case <(Value(ThisField), Const(n: String))   => if (field.value < n) None else Some(rule.error)
         case <=(Value(ThisField), Const(n: String))  => if (field.value <= n) None else Some(rule.error)
         case >(Value(ThisField), Const(n: String))   => if (field.value > n) None else Some(rule.error)
         case >=(Value(ThisField), Const(n: String))  => if (field.value >= n) None else Some(rule.error)
         case ===(Value(ThisField), Const(n: String)) => if (field.value == n) None else Some(rule.error)
+        case !==(Value(ThisField), Const(n: String)) => if (field.value != n) None else Some(rule.error)
         case <(Value(ThisField), Value(ref))         => if (refHelper(ref, field.value, Below, (s: String) => s)) None else Some(rule.error)
         case <=(Value(ThisField), Value(ref))        => if (refHelper(ref, field.value, BelowOrEqual, (s: String) => s)) None else Some(rule.error)
         case >(Value(ThisField), Value(ref))         => if (refHelper(ref, field.value, Above, (s: String) => s)) None else Some(rule.error)
         case >=(Value(ThisField), Value(ref))        => if (refHelper(ref, field.value, AboveOrEqual, (s: String) => s)) None else Some(rule.error)
         case ===(Value(ThisField), Value(ref))       => if (refHelper(ref, field.value, Equal, (s: String) => s)) None else Some(rule.error)
+        case !==(Value(ThisField), Value(ref))       => if (refHelper(ref, field.value, NotEqual, (s: String) => s)) None else Some(rule.error)
         case MatchRegex(regex)                       => if (field.value.matches(regex)) None else Some(rule.error)
         case DoNotMatchRegex(regex)                  => if (!field.value.matches(regex)) None else Some(rule.error)
         case Required(err)                           => if (!field.value.isEmpty) None else Some(err)

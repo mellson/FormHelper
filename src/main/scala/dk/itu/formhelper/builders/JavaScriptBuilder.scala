@@ -40,31 +40,37 @@ object JavaScriptBuilder {
         case >(Length(ThisField), Const(n: Int))     => (lengthValidation(fieldID, uniqueID, n, ">", errMsg), uniqueID, fieldRefID) :: Nil
         case >=(Length(ThisField), Const(n: Int))    => (lengthValidation(fieldID, uniqueID, n, ">=", errMsg), uniqueID, fieldRefID) :: Nil
         case ===(Length(ThisField), Const(n: Int))   => (lengthValidation(fieldID, uniqueID, n, "==", errMsg), uniqueID, fieldRefID) :: Nil
+        case !==(Length(ThisField), Const(n: Int))   => (lengthValidation(fieldID, uniqueID, n, "!=", errMsg), uniqueID, fieldRefID) :: Nil
         case <(Length(ThisField), Length(ref))       => (lengthRefValidation(fieldID, uniqueID, ref, "<", errMsg), uniqueID, fieldRefID) :: Nil
         case <=(Length(ThisField), Length(ref))      => (lengthRefValidation(fieldID, uniqueID, ref, "<=", errMsg), uniqueID, fieldRefID) :: Nil
         case >(Length(ThisField), Length(ref))       => (lengthRefValidation(fieldID, uniqueID, ref, ">", errMsg), uniqueID, fieldRefID) :: Nil
         case >=(Length(ThisField), Length(ref))      => (lengthRefValidation(fieldID, uniqueID, ref, ">=", errMsg), uniqueID, fieldRefID) :: Nil
         case ===(Length(ThisField), Length(ref))     => (lengthRefValidation(fieldID, uniqueID, ref, "==", errMsg), uniqueID, fieldRefID) :: Nil
+        case !==(Length(ThisField), Length(ref))     => (lengthRefValidation(fieldID, uniqueID, ref, "!=", errMsg), uniqueID, fieldRefID) :: Nil
         case <(Value(ThisField), Const(n: Int))      => (intValueValidation(fieldID, uniqueID, n, "<", errMsg), uniqueID, fieldRefID) :: Nil
         case <=(Value(ThisField), Const(n: Int))     => (intValueValidation(fieldID, uniqueID, n, "<=", errMsg), uniqueID, fieldRefID) :: Nil
         case >(Value(ThisField), Const(n: Int))      => (intValueValidation(fieldID, uniqueID, n, ">", errMsg), uniqueID, fieldRefID) :: Nil
         case >=(Value(ThisField), Const(n: Int))     => (intValueValidation(fieldID, uniqueID, n, ">=", errMsg), uniqueID, fieldRefID) :: Nil
         case ===(Value(ThisField), Const(n: Int))    => (intValueValidation(fieldID, uniqueID, n, "==", errMsg), uniqueID, fieldRefID) :: Nil
+        case !==(Value(ThisField), Const(n: Int))    => (intValueValidation(fieldID, uniqueID, n, "!=", errMsg), uniqueID, fieldRefID) :: Nil
         case <(Value(ThisField), Const(n: Double))   => (doubleValueValidation(fieldID, uniqueID, n, "<", errMsg), uniqueID, fieldRefID) :: Nil
         case <=(Value(ThisField), Const(n: Double))  => (doubleValueValidation(fieldID, uniqueID, n, "<=", errMsg), uniqueID, fieldRefID) :: Nil
         case >(Value(ThisField), Const(n: Double))   => (doubleValueValidation(fieldID, uniqueID, n, ">", errMsg), uniqueID, fieldRefID) :: Nil
         case >=(Value(ThisField), Const(n: Double))  => (doubleValueValidation(fieldID, uniqueID, n, ">=", errMsg), uniqueID, fieldRefID) :: Nil
         case ===(Value(ThisField), Const(n: Double)) => (doubleValueValidation(fieldID, uniqueID, n, "==", errMsg), uniqueID, fieldRefID) :: Nil
+        case !==(Value(ThisField), Const(n: Double)) => (doubleValueValidation(fieldID, uniqueID, n, "!=", errMsg), uniqueID, fieldRefID) :: Nil
         case <(Value(ThisField), Const(n: String))   => (stringValueValidation(fieldID, uniqueID, n, "<", errMsg), uniqueID, fieldRefID) :: Nil
         case <=(Value(ThisField), Const(n: String))  => (stringValueValidation(fieldID, uniqueID, n, "<=", errMsg), uniqueID, fieldRefID) :: Nil
         case >(Value(ThisField), Const(n: String))   => (stringValueValidation(fieldID, uniqueID, n, ">", errMsg), uniqueID, fieldRefID) :: Nil
         case >=(Value(ThisField), Const(n: String))  => (stringValueValidation(fieldID, uniqueID, n, ">=", errMsg), uniqueID, fieldRefID) :: Nil
         case ===(Value(ThisField), Const(n: String)) => (stringValueValidation(fieldID, uniqueID, n, "==", errMsg), uniqueID, fieldRefID) :: Nil
+        case !==(Value(ThisField), Const(n: String)) => (stringValueValidation(fieldID, uniqueID, n, "!=", errMsg), uniqueID, fieldRefID) :: Nil
         case <(Value(ThisField), Value(ref))         => (valueRefValidation(fieldID, uniqueID, ref, "<", errMsg), uniqueID, fieldRefID) :: Nil
         case <=(Value(ThisField), Value(ref))        => (valueRefValidation(fieldID, uniqueID, ref, "<=", errMsg), uniqueID, fieldRefID) :: Nil
         case >(Value(ThisField), Value(ref))         => (valueRefValidation(fieldID, uniqueID, ref, ">", errMsg), uniqueID, fieldRefID) :: Nil
-        case ===(Value(ThisField), Value(ref))       => (valueRefValidation(fieldID, uniqueID, ref, "==", errMsg), uniqueID, fieldRefID) :: Nil
         case >=(Value(ThisField), Value(ref))        => (valueRefValidation(fieldID, uniqueID, ref, ">=", errMsg), uniqueID, fieldRefID) :: Nil
+        case ===(Value(ThisField), Value(ref))       => (valueRefValidation(fieldID, uniqueID, ref, "==", errMsg), uniqueID, fieldRefID) :: Nil
+        case !==(Value(ThisField), Value(ref))       => (valueRefValidation(fieldID, uniqueID, ref, "!=", errMsg), uniqueID, fieldRefID) :: Nil
       }
     }
   }
