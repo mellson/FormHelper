@@ -14,6 +14,7 @@ trait Rules {
     def id = name
   }
 
+  implicit def liftStringToFieldRef(id: String): FieldRef = FieldId(id)
   case class FieldId(id: String) extends FieldRef {
     def name = "field " + id
   }
