@@ -320,8 +320,8 @@ object JavaScriptBuilder {
         |    var x = document.createElement("errMsg");
         |    x.setAttribute("id","errMsg%s");
         |    var t=document.createTextNode(" ");
-        |    btn.appendChild(t);
-        |    document.getElementById("label%s").appendChild(btn);
+        |    x.appendChild(t);
+        |    document.getElementById("label%s").appendChild(x);
         |}""".format(field.id, field.id).stripMargin
     else ""
   }

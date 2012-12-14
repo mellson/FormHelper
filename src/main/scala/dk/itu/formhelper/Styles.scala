@@ -20,11 +20,11 @@ trait Styles {
 
   sealed trait Placement
 
-  case object After extends Placement
-
   case object Before extends Placement
 
   case object Inside extends Placement
+
+  case object After extends Placement
 
   final case class Label(label: String, placement: Placement) extends Style {
     val compValue = 1

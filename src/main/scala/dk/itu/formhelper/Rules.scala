@@ -77,9 +77,6 @@ trait Rules {
     // Assign custom error to a rule
     def withError(err: => String) = ErrorRule(this, err)
 
-    // Assign custom error to a rule. This method name binds stronger and can therefor be used without adding parentheses
-    def |>(err: => String) = withError(err)
-
     def &&(rule: Rule) = AndRule(this, rule)
   }
 
