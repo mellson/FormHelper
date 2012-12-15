@@ -6,7 +6,8 @@ object FormHelper extends Styles with Rules {
 
   final case class Form(name: String, method: Method, action: String, fields: Field*) {
     lazy val html: String = HtmlBuilder.formHtml(this, validate = false)
-    lazy val htmlWithValidation: String = HtmlBuilder.formHtml(this, validate = true) + JavaScriptBuilder.validationScriptForForm(this)
+    lazy val htmlWithValidation: String =
+      HtmlBuilder.formHtml(this, validate = true) + JavaScriptBuilder.validationScriptForForm(this)
     lazy val validationScript: String = JavaScriptBuilder.validationScriptForForm(this)
     lazy val id: String = name.replaceAll(" ", "").toLowerCase
 
@@ -18,24 +19,16 @@ object FormHelper extends Styles with Rules {
   }
 
   sealed abstract class Method
-
   case object Get extends Method
-
   case object Post extends Method
 
   sealed abstract class Field {
     def name: String
-
     def value: String
-
     def id: String
-
     def inputType: String
-
     def setValue(s: String): Field
-
     def withStyle(s: Style): Field
-
     def withRule(r: Rule): Field
 
     lazy val html: String = HtmlBuilder.fieldHtml(this, validate = false)
@@ -54,80 +47,62 @@ object FormHelper extends Styles with Rules {
     else AndStyle(existingStyle.get, newStyle)
   }
 
-  case class Hidden(name: String, value: String = "", rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
+  case class Hidden(name: String, value: String = "",
+                    rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
     def id = name
-
     def inputType = "hidden"
-
     def withRule(r: Rule): Hidden = Hidden(name, value, Some(addRule(r, rule)), style)
-
     def withStyle(s: Style): Hidden = Hidden(name, value, rule, Some(addStyle(s, style)))
-
     def setValue(v: String): Hidden = Hidden(name, v, rule, style)
   }
 
-  case class Text(name: String, value: String = "", rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
+  case class Text(name: String, value: String = "",
+                  rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
     def id = name
-
     def inputType = "text"
-
     def withRule(r: Rule): Text = Text(name, value, Some(addRule(r, rule)), style)
-
     def withStyle(s: Style): Text = Text(name, value, rule, Some(addStyle(s, style)))
-
     def setValue(v: String): Text = Text(name, v, rule, style)
   }
 
-  case class Submit(name: String, value: String = "", rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
+  case class Submit(name: String, value: String = "",
+                    rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
     def id = name
-
     def inputType = "submit"
-
     def withRule(r: Rule): Submit = this
-
     def withStyle(s: Style): Submit = Submit(name, value, rule, Some(addStyle(s, style)))
-
     def setValue(v: String) = this
   }
 
-  case class Password(name: String, value: String = "", rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
+  case class Password(name: String, value: String = "",
+                      rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
     def id = name
-
     def inputType = "password"
-
     def withRule(r: Rule): Password = Password(name, value, Some(addRule(r, rule)), style)
-
     def withStyle(s: Style): Password = Password(name, value, rule, Some(addStyle(s, style)))
-
     def setValue(v: String): Password = Password(name, v, rule, style)
   }
 
-  case class Radio(name: String, value: String, rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
+  case class Radio(name: String, value: String,
+                   rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
     def id = name + value
-
     def inputType = "radio"
-
     def withRule(r: Rule): Radio = Radio(name, value, Some(addRule(r, rule)), style)
-
     def withStyle(s: Style): Radio = Radio(name, value, rule, Some(addStyle(s, style)))
-
     def setValue(v: String): Radio = Radio(name, value, rule, Some(addStyle(Checked, style)))
-
-    def setChecked(b: Boolean) = if (b) Radio(name, value, rule, Some(addStyle(Checked, style))) else Radio(name, value, rule, style)
+    def setChecked(b: Boolean) =
+      if (b) Radio(name, value, rule, Some(addStyle(Checked, style))) else Radio(name, value, rule, style)
   }
 
-  case class Checkbox(name: String, value: String, rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
+  case class Checkbox(name: String, value: String,
+                      rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
     def id = name + value
-
     def inputType = "checkbox"
-
     def withRule(r: Rule): Checkbox = Checkbox(name, value, Some(addRule(r, rule)), style)
-
     def withStyle(s: Style): Checkbox = Checkbox(name, value, rule, Some(addStyle(s, style)))
-
     def setValue(v: String): Checkbox = Checkbox(name, value, rule, Some(addStyle(Checked, style)))
-
-    def setChecked(b: Boolean) = if (b) Checkbox(name, value, rule, Some(addStyle(Checked, style))) else Checkbox(name, value, rule, style)
+    def setChecked(b: Boolean) =
+      if (b) Checkbox(name, value, rule, Some(addStyle(Checked, style))) else Checkbox(name, value, rule, style)
   }
 
   // Converts a style to a list of styles
@@ -144,4 +119,3 @@ object FormHelper extends Styles with Rules {
     case r         => List(r)
   }
 }
-

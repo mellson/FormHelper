@@ -15,6 +15,7 @@ trait Rules {
   }
 
   implicit def liftStringToFieldRef(id: String): FieldRef = FieldId(id)
+
   case class FieldId(id: String) extends FieldRef {
     def name = "field " + id
   }
@@ -74,7 +75,6 @@ trait Rules {
   sealed abstract class Rule {
     def error: String
 
-    // Assign custom error to a rule
     def withError(err: => String) = ErrorRule(this, err)
 
     def &&(rule: Rule) = AndRule(this, rule)

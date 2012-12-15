@@ -16,18 +16,21 @@ object JavaScriptBuilder {
 
   // Returns a tuple with the validation function and a unique id for each rule in a rule list
   private def ruleToFunctions(rule: Rule, field: Field, form: Form, customErr: String = "", fieldRefID: String = ""): List[(String, String, String)] = {
+
     lazy val id = idGenerator.nextId
     lazy val fieldID = if (fieldRefID.isEmpty) field.id else fieldRefID
     lazy val uniqueID = field.id + id
     lazy val errMsg = if (customErr.isEmpty) rule.error else customErr
 
     field match {
-      case Submit(_, _, _, _)                       => Nil
-      case Radio(_, _, _, _) | Checkbox(_, _, _, _) =>
-        if (ruleList(rule).contains(Required)) (groupRequiredValidation(fieldID, field.name, uniqueID, errMsg), uniqueID, fieldRefID) :: Nil
+      case Submit(_, _, _, _)                        => Nil
+      case Radio(_, _, _, _) | Checkbox(_, _, _, _)  =>
+        if (ruleList(rule).contains(Required))
+          (groupRequiredValidation(fieldID, field.name, uniqueID, errMsg), uniqueID, fieldRefID) :: Nil
         else Nil
-      case _                                        => rule match {
-        case AndRule(r1, r2)                         => ruleToFunctions(r1, field, form, customErr, fieldRefID) ++ ruleToFunctions(r2, field, form, customErr, fieldRefID)
+      case _                                         => rule match {
+        case AndRule(r1, r2)                         => ruleToFunctions(r1, field, form, customErr, fieldRefID) ++
+                                                        ruleToFunctions(r2, field, form, customErr, fieldRefID)
         case ErrorRule(r, error)                     => ruleToFunctions(r, field, form, error, fieldRefID)
         case ShowWhen(ref, r, error)                 => ruleToFunctions(r, field, form, error, ref.id)
         case OK(error)                               => (okValidation(uniqueID, if (customErr.isEmpty) error else customErr), uniqueID, fieldRefID) :: Nil
