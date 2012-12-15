@@ -27,3 +27,5 @@ target/
 *.sc
 
 src/main/js/test.js
+
+src/main/scala/example.html

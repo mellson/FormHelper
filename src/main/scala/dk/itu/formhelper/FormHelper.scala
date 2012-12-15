@@ -47,8 +47,7 @@ object FormHelper extends Styles with Rules {
     else AndStyle(existingStyle.get, newStyle)
   }
 
-  case class Hidden(name: String, value: String = "",
-                    rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
+  case class Hidden(name: String, value: String = "",  rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
     def id = name
     def inputType = "hidden"
     def withRule(r: Rule): Hidden = Hidden(name, value, Some(addRule(r, rule)), style)
@@ -56,8 +55,7 @@ object FormHelper extends Styles with Rules {
     def setValue(v: String): Hidden = Hidden(name, v, rule, style)
   }
 
-  case class Text(name: String, value: String = "",
-                  rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
+  case class Text(name: String, value: String = "",  rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
     def id = name
     def inputType = "text"
     def withRule(r: Rule): Text = Text(name, value, Some(addRule(r, rule)), style)
@@ -65,8 +63,7 @@ object FormHelper extends Styles with Rules {
     def setValue(v: String): Text = Text(name, v, rule, style)
   }
 
-  case class Submit(name: String, value: String = "",
-                    rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
+  case class Submit(name: String, value: String = "", rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
     def id = name
     def inputType = "submit"
     def withRule(r: Rule): Submit = this
@@ -74,8 +71,7 @@ object FormHelper extends Styles with Rules {
     def setValue(v: String) = this
   }
 
-  case class Password(name: String, value: String = "",
-                      rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
+  case class Password(name: String, value: String = "", rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
     def id = name
     def inputType = "password"
     def withRule(r: Rule): Password = Password(name, value, Some(addRule(r, rule)), style)
@@ -83,22 +79,22 @@ object FormHelper extends Styles with Rules {
     def setValue(v: String): Password = Password(name, v, rule, style)
   }
 
-  case class Radio(name: String, value: String,
-                   rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
+  case class Radio(name: String, value: String, rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
     def id = name + value
     def inputType = "radio"
-    def withRule(r: Rule): Radio = Radio(name, value, Some(addRule(r, rule)), style)
+    // Only rule supported is Required
+    def withRule(r: Rule): Radio = if (r==Required) Radio(name, value, Some(addRule(r, rule)), style) else this
     def withStyle(s: Style): Radio = Radio(name, value, rule, Some(addStyle(s, style)))
     def setValue(v: String): Radio = Radio(name, value, rule, Some(addStyle(Checked, style)))
     def setChecked(b: Boolean) =
       if (b) Radio(name, value, rule, Some(addStyle(Checked, style))) else Radio(name, value, rule, style)
   }
 
-  case class Checkbox(name: String, value: String,
-                      rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
+  case class Checkbox(name: String, value: String, rule: Option[Rule] = None, style: Option[Style] = None) extends Field {
     def id = name + value
     def inputType = "checkbox"
-    def withRule(r: Rule): Checkbox = Checkbox(name, value, Some(addRule(r, rule)), style)
+    // Only rule supported is Required
+    def withRule(r: Rule): Checkbox = if (r==Required) Checkbox(name, value, Some(addRule(r, rule)), style) else this
     def withStyle(s: Style): Checkbox = Checkbox(name, value, rule, Some(addStyle(s, style)))
     def setValue(v: String): Checkbox = Checkbox(name, value, rule, Some(addStyle(Checked, style)))
     def setChecked(b: Boolean) =
