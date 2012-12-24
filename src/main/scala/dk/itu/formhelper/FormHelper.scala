@@ -35,6 +35,9 @@ object FormHelper extends Styles with Rules {
     lazy val htmlWithValidation: String = HtmlBuilder.fieldHtml(this, validate = true)
     val rule: Option[Rule]
     val style: Option[Style]
+
+    def containsStyle(style: Style) = styleList(this.style.getOrElse(EmptyStyle)).contains(style)
+    def containsRule(rule: Rule) = ruleList(this.rule.getOrElse(EmptyRule)).contains(rule)
   }
 
   private def addRule(newRule: Rule, existingRule: Option[Rule]): Rule = {

@@ -22,7 +22,7 @@ object ScalaBuilder {
   def validateField(rule: Rule, field: Field, form: Form): Option[String] = field match {
     case Radio(_, _, _, _) | Checkbox(_, _, _, _) =>
       if (ruleList(rule).contains(Required)) {
-        val anyFieldFromGroupChecked = !form.fields.filter(f => f.name == field.name).filter(f => styleList(f.style.getOrElse(EmptyStyle)).contains(Checked)).isEmpty
+        val anyFieldFromGroupChecked = !form.fields.find(f => f.name == field.name && f.containsStyle(Checked)).isEmpty
         if (anyFieldFromGroupChecked) None
         else Some(rule.error)
       } else None
@@ -140,8 +140,8 @@ object ScalaBuilder {
      */
     def addGroupRequired(field: Field): Field = field match {
       case Radio(_, _, _, _) | Checkbox(_, _, _, _) =>
-        val groupContainsRequired = !form.fields.filter(f => f.name == field.name).filter(f => ruleList(f.rule.getOrElse(EmptyRule)).contains(Required)).isEmpty
-        val selfContainsRequired = ruleList(field.rule.getOrElse(EmptyRule)).contains(Required)
+        val groupContainsRequired = !form.fields.find(f => f.name == field.name && field.containsRule(Required)).isEmpty
+        val selfContainsRequired = field.containsRule(Required)
         if (groupContainsRequired)
           if (selfContainsRequired) field
           else field withRule Required
